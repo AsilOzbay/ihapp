@@ -109,7 +109,7 @@ const fetchCryptoData = async () => {
   try {
     const symbols = ['BTCUSDT', 'ETHUSDT', 'XRPUSDT', 'SOLUSDT', 'DOGEUSDT'];
     const requests = symbols.map((symbol) =>
-      axios.get(https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol})
+      axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
     );
     const responses = await Promise.all(requests);
 
@@ -132,7 +132,7 @@ const fetchTrendingCoins = async () => {
   try {
     const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
     const requests = symbols.map((symbol) =>
-      axios.get(https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol})
+      axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
     );
     const responses = await Promise.all(requests);
 
@@ -194,7 +194,7 @@ const historicalDataCache = {};
 const fetchHistoricalData = async (symbol, interval = '1m', limit = 20) => {
   try {
     const response = await axios.get(
-      https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}
+      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
     );
     return response.data.map((entry) => ({
       time: new Date(entry[0]).toLocaleTimeString(), // Timestamp
@@ -209,9 +209,8 @@ const fetchHistoricalData = async (symbol, interval = '1m', limit = 20) => {
 // Endpoint to get graph data
 app.get('/graph-data/:symbol', async (req, res) => {
   const { symbol } = req.params;
-
   // Convert to Binance symbol
-  const binanceSymbol = ${symbol.toUpperCase()}USDT;
+  const binanceSymbol = `${symbol.toUpperCase()}USDT`;
 
   // Check cache
   if (historicalDataCache[binanceSymbol]) {
@@ -235,5 +234,5 @@ setInterval(async () => {
 
 // -------------------- START SERVER --------------------
 app.listen(PORT, () => {
-  console.log(Server running on port ${PORT});
+  console.log(`Server running on port ${PORT}`);
 });

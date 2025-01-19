@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const navigate = useNavigate();  // useNavigate hook'u yönlendirme için kullanılıyor
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +21,9 @@ const Auth = () => {
           password,
         });
         alert('Login successful! Token: ' + res.data.token);
+
+        // Başarılı giriş sonrası Home sayfasına yönlendirme
+        navigate('/');
       } catch (err) {
         alert('Error: ' + (err.response?.data?.message || 'Login failed'));
       }

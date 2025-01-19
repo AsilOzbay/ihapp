@@ -8,16 +8,33 @@ const CryptoPricesTable = () => {
   const [filters, setFilters] = useState({
     assetType: "All assets",
     timeframe: "1D",
-    currency: "TRY",
+    currency: "TRY", // default currency
     rowCount: 30,
   });
   const [sortField, setSortField] = useState("mktCap");
   const [sortOrder, setSortOrder] = useState("desc");
 
+  // Hardcoded exchange rates relative to 1 USD:
+  const conversionRates = {
+    USD: 1,      // base is USD
+    EUR: 0.90,
+    GBP: 0.80,
+    TRY: 27,     // example ratio USD→TRY
+  };
+
+  // Currency symbols for display:
+  const currencySymbols = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    TRY: "₺",
+  };
+
   useEffect(() => {
     const fetchCryptoData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/crypto-data"); // Backend endpoint
+        // Assumes your backend returns prices in USD
+        const response = await fetch("http://localhost:5000/crypto-data");
         const result = await response.json();
         setCryptoData(result.data);
         setLoading(false);
@@ -60,7 +77,9 @@ const CryptoPricesTable = () => {
   }
 
   if (selectedCrypto) {
-    return <TradePage crypto={selectedCrypto} onBack={() => setSelectedCrypto(null)} />;
+    return (
+      <TradePage crypto={selectedCrypto} onBack={() => setSelectedCrypto(null)} />
+    );
   }
 
   return (
@@ -79,6 +98,7 @@ const CryptoPricesTable = () => {
             <option>Gainers</option>
             <option>Losers</option>
           </select>
+
           <select
             value={filters.timeframe}
             onChange={(e) => handleFilterChange("timeframe", e.target.value)}
@@ -90,25 +110,30 @@ const CryptoPricesTable = () => {
             <option>1M</option>
             <option>1Y</option>
           </select>
+
           <select
             value={filters.currency}
             onChange={(e) => handleFilterChange("currency", e.target.value)}
             className="border px-3 py-2 rounded"
           >
-            <option>TRY</option>
-            <option>USD</option>
+            <option value="TRY">TRY</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
           </select>
+
           <select
             value={filters.rowCount}
             onChange={(e) => handleFilterChange("rowCount", parseInt(e.target.value))}
             className="border px-3 py-2 rounded"
           >
-            <option>10 rows</option>
-            <option>30 rows</option>
-            <option>50 rows</option>
+            <option value={10}>10 rows</option>
+            <option value={30}>30 rows</option>
+            <option value={50}>50 rows</option>
           </select>
         </div>
       </div>
+
       <table className="table-auto w-full text-left text-sm">
         <thead>
           <tr>
@@ -142,30 +167,46 @@ const CryptoPricesTable = () => {
           </tr>
         </thead>
         <tbody>
-          {cryptoData.slice(0, filters.rowCount).map((item, index) => (
-            <tr key={index} className="border-t">
-              <td className="px-4 py-2">{item.symbol}</td>
-              <td className="px-4 py-2">${item.price.toLocaleString()}</td>
-              <td className="px-4 py-2">Chart Placeholder</td>
-              <td
-                className={`px-4 py-2 ${
-                  item.change > 0 ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {item.change.toFixed(2)}%
-              </td>
-              <td className="px-4 py-2">{item.mktCap?.toLocaleString()}</td>
-              <td className="px-4 py-2">{item.volume.toLocaleString()}</td>
-              <td className="px-4 py-2">
-                <button
-                  onClick={() => setSelectedCrypto(item)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded"
+          {cryptoData.slice(0, filters.rowCount).map((item, index) => {
+            // Convert price, mktCap, volume from USD to selected currency:
+            const rate = conversionRates[filters.currency] || 1;
+            const symbol = currencySymbols[filters.currency] || "";
+            const convertedPrice = item.price * rate;
+            const convertedMktCap = item.mktCap ? item.mktCap * rate : null;
+            const convertedVolume = item.volume ? item.volume * rate : null;
+
+            return (
+              <tr key={index} className="border-t">
+                <td className="px-4 py-2">{item.symbol}</td>
+                <td className="px-4 py-2">
+                  {symbol}
+                  {convertedPrice.toLocaleString()}
+                </td>
+                <td className="px-4 py-2">Chart Placeholder</td>
+                <td
+                  className={`px-4 py-2 ${
+                    item.change > 0 ? "text-green-500" : "text-red-500"
+                  }`}
                 >
-                  Trade
-                </button>
-              </td>
-            </tr>
-          ))}
+                  {item.change.toFixed(2)}%
+                </td>
+                <td className="px-4 py-2">
+                  {convertedMktCap ? convertedMktCap.toLocaleString() : "—"}
+                </td>
+                <td className="px-4 py-2">
+                  {convertedVolume ? convertedVolume.toLocaleString() : "—"}
+                </td>
+                <td className="px-4 py-2">
+                  <button
+                    onClick={() => setSelectedCrypto(item)}
+                    className="bg-blue-500 text-white px-3 py-1 rounded"
+                  >
+                    Trade
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

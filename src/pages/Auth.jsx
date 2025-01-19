@@ -4,31 +4,32 @@ import { useNavigate } from 'react-router-dom';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const navigate = useNavigate();  // useNavigate hook'u yönlendirme için kullanılıyor
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isLogin) {
-      // Kullanıcı giriş işlemi
       try {
         const res = await axios.post('http://localhost:5000/login', {
           email,
           password,
         });
-        alert('Login successful! Token: ' + res.data.token);
-
-        // Başarılı giriş sonrası Home sayfasına yönlendirme
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        alert(`Login successful! Welcome, ${res.data.user.firstName} ${res.data.user.lastName}`);
+        window.location.reload();
         navigate('/');
       } catch (err) {
         alert('Error: ' + (err.response?.data?.message || 'Login failed'));
       }
     } else {
-      // Kullanıcı kayıt işlemi
       if (password !== confirmPassword) {
         alert('Passwords do not match');
         return;
@@ -36,11 +37,13 @@ const Auth = () => {
 
       try {
         await axios.post('http://localhost:5000/register', {
+          firstName,
+          lastName,
           email,
           password,
         });
-        alert('Registration successful!');
-        setIsLogin(true); // Başarılı kayıt sonrası giriş ekranına geç
+        alert('Registration successful! You can now log in.');
+        setIsLogin(true);
       } catch (err) {
         alert('Error: ' + (err.response?.data?.message || 'Registration failed'));
       }
@@ -66,6 +69,33 @@ const Auth = () => {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">First Name</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Enter your first name..."
+                  className="w-full px-4 py-2 border rounded-md"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">Last Name</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Enter your last name..."
+                  className="w-full px-4 py-2 border rounded-md"
+                  required
+                />
+              </div>
+            </>
+          )}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
             <input

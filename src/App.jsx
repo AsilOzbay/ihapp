@@ -6,6 +6,7 @@ import Auth from './pages/Auth';
 import Navbar from './components/Navbar';
 
 
+
 function App() {
   return (
     <Router>

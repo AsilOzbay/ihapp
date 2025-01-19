@@ -1,135 +1,92 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import TradePage from "./TradePage"; // Import the TradePage component
 
 const CryptoPricesTable = () => {
-  const [timeframe, setTimeframe] = useState("1D");
-  const [currency, setCurrency] = useState("TRY");
+  const [cryptoData, setCryptoData] = useState([]);
   const [rows, setRows] = useState(30);
+  const [loading, setLoading] = useState(true);
+  const [selectedCrypto, setSelectedCrypto] = useState(null); // State for selected crypto
 
-  const data = [
-    { asset: "Bitcoin", symbol: "BTC", price: 3715669, chart: "↗️", change: "+0.39%", mktCap: 73500000000, volume: 2000000000 },
-    { asset: "Ethereum", symbol: "ETH", price: 119409.50, chart: "↗️", change: "+1.89%", mktCap: 14400000000, volume: 1400000000 },
-    { asset: "XRP", symbol: "XRP", price: 111.63, chart: "↘️", change: "-2.07%", mktCap: 6400000000, volume: 402200000 },
-    { asset: "Tether", symbol: "USDT", price: 35.40, chart: "→", change: "+0.12%", mktCap: 4900000000, volume: 640000000 },
-    { asset: "Solana", symbol: "SOL", price: 9619.80, chart: "↗️", change: "+11.62%", mktCap: 4700000000, volume: 1100000000 },
-  ];
+  useEffect(() => {
+    // Fetch data from Binance API
+    const fetchCryptoData = async () => {
+      try {
+        const symbols = ["BTCUSDT", "ETHUSDT", "XRPUSDT", "SOLUSDT", "DOGEUSDT"];
+        const requests = symbols.map((symbol) =>
+          axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+        );
 
-  const currencySymbols = {
-    TRY: "₺",
-    USD: "$",
-    EUR: "€",
-  };
+        const responses = await Promise.all(requests);
+        const data = responses.map((response) => ({
+          symbol: response.data.symbol.replace("USDT", ""),
+          price: parseFloat(response.data.lastPrice),
+          change: parseFloat(response.data.priceChangePercent),
+          volume: parseFloat(response.data.volume),
+          highPrice: parseFloat(response.data.highPrice),
+          lowPrice: parseFloat(response.data.lowPrice),
+        }));
 
-  // Adjust price for selected currency (dummy conversion rates)
-  const conversionRates = { TRY: 1, USD: 0.036, EUR: 0.033 };
+        setCryptoData(data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data from Binance API:", error);
+      }
+    };
 
-  const displayedData = data
-    .map((item) => ({
-      ...item,
-      price: (item.price * conversionRates[currency]).toFixed(2),
-      mktCap: (item.mktCap * conversionRates[currency]).toFixed(2),
-      volume: (item.volume * conversionRates[currency]).toFixed(2),
-    }))
-    .slice(0, rows);
+    fetchCryptoData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (selectedCrypto) {
+    // Render the TradePage if a cryptocurrency is selected
+    return <TradePage crypto={selectedCrypto} onBack={() => setSelectedCrypto(null)} />;
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold">Crypto Prices</h2>
-        <div className="flex space-x-4">
-          {/* Timeframe Dropdown */}
-          <div className="relative">
-            <button className="border px-3 py-1 rounded" onClick={() => document.getElementById("timeframe-menu").classList.toggle("hidden")}>
-              {timeframe} ⌄
-            </button>
-            <div id="timeframe-menu" className="absolute bg-white border rounded mt-1 hidden">
-              {["1H", "1D", "1W", "1M", "1Y"].map((option) => (
-                <div
-                  key={option}
-                  className={`px-3 py-1 cursor-pointer ${timeframe === option ? "bg-gray-200" : ""}`}
-                  onClick={() => {
-                    setTimeframe(option);
-                    document.getElementById("timeframe-menu").classList.add("hidden");
-                  }}
-                >
-                  {option}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Currency Dropdown */}
-          <div className="relative">
-            <button className="border px-3 py-1 rounded" onClick={() => document.getElementById("currency-menu").classList.toggle("hidden")}>
-              {currency} ⌄
-            </button>
-            <div id="currency-menu" className="absolute bg-white border rounded mt-1 hidden">
-              {["TRY", "USD", "EUR"].map((option) => (
-                <div
-                  key={option}
-                  className={`px-3 py-1 cursor-pointer ${currency === option ? "bg-gray-200" : ""}`}
-                  onClick={() => {
-                    setCurrency(option);
-                    document.getElementById("currency-menu").classList.add("hidden");
-                  }}
-                >
-                  {option}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Rows Dropdown */}
-          <div className="relative">
-            <button className="border px-3 py-1 rounded" onClick={() => document.getElementById("rows-menu").classList.toggle("hidden")}>
-              {rows} rows ⌄
-            </button>
-            <div id="rows-menu" className="absolute bg-white border rounded mt-1 hidden">
-              {[5, 10, 30].map((option) => (
-                <div
-                  key={option}
-                  className={`px-3 py-1 cursor-pointer ${rows === option ? "bg-gray-200" : ""}`}
-                  onClick={() => {
-                    setRows(option);
-                    document.getElementById("rows-menu").classList.add("hidden");
-                  }}
-                >
-                  {option} rows
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <table className="table-auto w-full text-left">
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <h2 className="text-xl font-bold mb-4">Crypto Prices</h2>
+      <table className="table-auto w-full text-left text-sm">
         <thead>
           <tr>
-            <th className="px-2 py-2">Asset</th>
-            <th className="px-2 py-2">Price ({currencySymbols[currency]})</th>
-            <th className="px-2 py-2">Chart</th>
-            <th className="px-2 py-2">Change</th>
-            <th className="px-2 py-2">Mkt Cap ({currencySymbols[currency]})</th>
-            <th className="px-2 py-2">Volume ({currencySymbols[currency]})</th>
-            <th className="px-2 py-2">Actions</th>
+            <th className="px-4 py-2">Symbol</th>
+            <th className="px-4 py-2">Price</th>
+            <th className="px-4 py-2">Change (%)</th>
+            <th className="px-4 py-2">Volume</th>
+            <th className="px-4 py-2">High (24h)</th>
+            <th className="px-4 py-2">Low (24h)</th>
+            <th className="px-4 py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {displayedData.map((item, index) => (
+          {cryptoData.slice(0, rows).map((item, index) => (
             <tr key={index} className="border-t">
-              <td className="px-2 py-2">{item.asset}</td>
-              <td className="px-2 py-2">{item.price}</td>
-              <td className="px-2 py-2">{item.chart}</td>
+              <td className="px-4 py-2">{item.symbol}</td>
+              <td className="px-4 py-2">${item.price.toLocaleString()}</td>
               <td
-                className={`px-2 py-2 ${
-                  item.change.startsWith("+") ? "text-green-500" : "text-red-500"
+                className={`px-4 py-2 ${
+                  item.change > 0 ? "text-green-500" : "text-red-500"
                 }`}
               >
-                {item.change}
+                {item.change.toFixed(2)}%
               </td>
-              <td className="px-2 py-2">{item.mktCap}</td>
-              <td className="px-2 py-2">{item.volume}</td>
-              <td className="px-2 py-2">
-                <button className="bg-blue-500 text-white rounded px-3 py-1">Trade</button>
+              <td className="px-4 py-2">{item.volume.toLocaleString()}</td>
+              <td className="px-4 py-2">${item.highPrice.toLocaleString()}</td>
+              <td className="px-4 py-2">${item.lowPrice.toLocaleString()}</td>
+              <td className="px-4 py-2">
+                <button
+                  onClick={() => setSelectedCrypto(item)} // Set selected crypto
+                  className="bg-blue-500 text-white px-3 py-1 rounded"
+                >
+                  Trade
+                </button>
               </td>
             </tr>
           ))}

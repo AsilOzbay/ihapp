@@ -33,8 +33,7 @@ const CryptoPricesTable = () => {
   useEffect(() => {
     const fetchCryptoData = async () => {
       try {
-        // Assumes your backend returns prices in USD
-        const response = await fetch("http://localhost:5000/crypto-data");
+        const response = await fetch(`http://localhost:5000/crypto-data?timeframe=${filters.timeframe}`);
         const result = await response.json();
         setCryptoData(result.data);
         setLoading(false);
@@ -42,9 +41,9 @@ const CryptoPricesTable = () => {
         console.error("Error fetching crypto data from backend:", error.message);
       }
     };
-
+  
     fetchCryptoData();
-  }, []);
+  }, [filters.timeframe]); // Refetch data when timeframe changes
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -100,16 +99,16 @@ const CryptoPricesTable = () => {
           </select>
 
           <select
-            value={filters.timeframe}
-            onChange={(e) => handleFilterChange("timeframe", e.target.value)}
-            className="border px-3 py-2 rounded"
-          >
-            <option>1D</option>
-            <option>1H</option>
-            <option>1W</option>
-            <option>1M</option>
-            <option>1Y</option>
-          </select>
+  value={filters.timeframe}
+  onChange={(e) => handleFilterChange("timeframe", e.target.value)}
+  className="border px-3 py-2 rounded"
+>
+  <option value="1D">1D</option>
+  <option value="1H">1H</option>
+  <option value="1W">1W</option>
+  <option value="1M">1M</option>
+  <option value="1Y">1Y</option>
+</select>
 
           <select
             value={filters.currency}

@@ -97,37 +97,46 @@ app.post('/login', async (req, res) => {
 });
 
 // -------------------- CRYPTO DATA FETCHING --------------------
-
 // Cache variables
 let cachedCryptoData = [];
 let cachedTrendingData = [];
 let cachedExchangesData = [];
 let lastFetchTime = null;
 
-// Fetch cryptocurrency data
+// Fetch cryptocurrency data (Top 50 pairs from Binance)
 const fetchCryptoData = async () => {
-  try {
-    const symbols = ['BTCUSDT', 'ETHUSDT', 'XRPUSDT', 'SOLUSDT', 'DOGEUSDT'];
-    const requests = symbols.map((symbol) =>
-      axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
-    );
-    const responses = await Promise.all(requests);
+    try {
+      // Valid 30 symbols
+      const symbols = [
+        'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT',
+        'DOGEUSDT', 'MATICUSDT', 'SOLUSDT', 'DOTUSDT', 'SHIBUSDT',
+        'TRXUSDT', 'LTCUSDT', 'LINKUSDT', 'AVAXUSDT', 'UNIUSDT',
+        'ATOMUSDT', 'ETCUSDT', 'XLMUSDT', 'BCHUSDT', 'APTUSDT',
+        'APEUSDT', 'FILUSDT', 'NEARUSDT', 'QNTUSDT', 'AAVEUSDT',
+        'AXSUSDT', 'SANDUSDT', 'VETUSDT', 'EGLDUSDT', 'EOSUSDT'
+      ];
+  
+      const requests = symbols.map((symbol) =>
+        axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+      );
+      const responses = await Promise.all(requests);
+  
+      cachedCryptoData = responses.map((response) => ({
+        symbol: response.data.symbol.replace('USDT', ''),
+        price: parseFloat(response.data.lastPrice),
+        change: parseFloat(response.data.priceChangePercent),
+        volume: parseFloat(response.data.volume),
+        highPrice: parseFloat(response.data.highPrice),
+        lowPrice: parseFloat(response.data.lowPrice),
+      }));
+  
+      console.log('Crypto data fetched successfully for 30 symbols.');
+    } catch (error) {
+      console.error('Error fetching crypto data:', error.message);
+    }
+  };
 
-    cachedCryptoData = responses.map((response) => ({
-      symbol: response.data.symbol.replace('USDT', ''),
-      price: parseFloat(response.data.lastPrice),
-      change: parseFloat(response.data.priceChangePercent),
-      volume: parseFloat(response.data.volume),
-      highPrice: parseFloat(response.data.highPrice),
-      lowPrice: parseFloat(response.data.lowPrice),
-    }));
-    console.log('Crypto data fetched successfully.');
-  } catch (error) {
-    console.error('Error fetching crypto data:', error.message);
-  }
-};
-
-// Fetch trending coins
+// Fetch trending coins (You can keep this shorter or also expand)
 const fetchTrendingCoins = async () => {
   try {
     const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
@@ -230,7 +239,46 @@ setInterval(async () => {
     historicalDataCache[symbol] = await fetchHistoricalData(symbol);
   }
   console.log('Historical data refreshed.');
-}, 60000); // every 60 seconds
+}, 6000000); // every 6000 seconds
+
+app.get('/crypto-data', async (req, res) => {
+    const { timeframe = '1D' } = req.query; // Default to 1-day data
+    let interval;
+    
+    // Map timeframe to Binance interval
+    switch (timeframe) {
+      case '1H':
+        interval = '1m';
+        break;
+      case '1D':
+        interval = '1h';
+        break;
+      case '1W':
+        interval = '4h';
+        break;
+      case '1M':
+        interval = '1d';
+        break;
+      case '1Y':
+        interval = '1w';
+        break;
+      default:
+        interval = '1h';
+    }
+  
+    try {
+      const symbols = ['BTCUSDT', 'ETHUSDT', 'XRPUSDT'];
+      const requests = symbols.map((symbol) =>
+        fetchHistoricalData(symbol, interval, 20) // Use your helper
+      );
+      const data = await Promise.all(requests);
+  
+      res.json({ data, timeframe });
+    } catch (error) {
+      console.error('Error fetching crypto data:', error.message);
+      res.status(500).json({ message: 'Error fetching crypto data' });
+    }
+  });
 
 // -------------------- START SERVER --------------------
 app.listen(PORT, () => {

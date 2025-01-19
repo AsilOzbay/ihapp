@@ -1,13 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 const TopExchanges = () => {
-  const data = [
-    { rank: 1, exchange: "Binance", volume: "$20B", change: "2.1%" },
-    { rank: 2, exchange: "Coinbase", volume: "$12B", change: "1.5%" },
-    { rank: 3, exchange: "Kraken", volume: "$8B", change: "0.8%" },
-    { rank: 4, exchange: "Bitfinex", volume: "$5B", change: "-1.2%" },
-    { rank: 5, exchange: "KuCoin", volume: "$4B", change: "0.5%" },
-  ];
+  const [exchangesData, setExchangesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchExchanges = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/top-exchanges");
+        const result = await response.json();
+        setExchangesData(result.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching top exchanges:", error.message);
+      }
+    };
+
+    fetchExchanges();
+  }, []);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -15,24 +29,24 @@ const TopExchanges = () => {
       <table className="table-auto w-full text-left text-sm">
         <thead>
           <tr>
-            <th className="px-4 py-2">#</th>
+            <th className="px-4 py-2">Rank</th>
             <th className="px-4 py-2">Exchange</th>
             <th className="px-4 py-2">Volume</th>
             <th className="px-4 py-2">Change</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((item, index) => (
+          {exchangesData.map((exchange, index) => (
             <tr key={index} className="border-t">
-              <td className="px-4 py-2">{item.rank}</td>
-              <td className="px-4 py-2">{item.exchange}</td>
-              <td className="px-4 py-2">{item.volume}</td>
+              <td className="px-4 py-2">{exchange.rank}</td>
+              <td className="px-4 py-2">{exchange.exchange}</td>
+              <td className="px-4 py-2">{exchange.volume}</td>
               <td
                 className={`px-4 py-2 ${
-                  item.change.startsWith("+") ? "text-green-500" : "text-red-500"
+                  exchange.change.startsWith("+") ? "text-green-500" : "text-red-500"
                 }`}
               >
-                {item.change}
+                {exchange.change}
               </td>
             </tr>
           ))}

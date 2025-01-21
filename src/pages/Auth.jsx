@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,6 +11,9 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,8 +27,8 @@ const Auth = () => {
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data.user));
         alert(`Login successful! Welcome, ${res.data.user.firstName} ${res.data.user.lastName}`);
+        navigate(from);
         window.location.reload();
-        navigate('/');
       } catch (err) {
         alert('Error: ' + (err.response?.data?.message || 'Login failed'));
       }

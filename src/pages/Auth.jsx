@@ -27,8 +27,12 @@ const Auth = () => {
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data.user));
         alert(`Login successful! Welcome, ${res.data.user.firstName} ${res.data.user.lastName}`);
-        navigate(from);
-        window.location.reload();
+        if (from === "/portfolio") {
+          navigate(from); // Eğer 'auth' sayfasından gelindiyse Home'a yönlendir
+        } else {
+          navigate("/"); // Eğer başka bir sayfadan gelindiyse oraya yönlendir
+          window.location.reload();
+        }
       } catch (err) {
         alert('Error: ' + (err.response?.data?.message || 'Login failed'));
       }

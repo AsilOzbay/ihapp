@@ -1,9 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation(); // Kullanıcının mevcut konumunu takip eder
 
   useEffect(() => {
     // localStorage'dan kullanıcı bilgilerini çek
@@ -38,13 +39,17 @@ export default function Navbar() {
 
         {user ? (
           <div className="flex items-center space-x-4">
-            <span className="text-gray-200">Welcome, {user.firstName} {user.lastName}</span>
+            <span className="text-gray-200">{user.firstName} {user.lastName}</span>
             <button onClick={handleLogout} className="hover:text-red-400">
               Logout
             </button>
           </div>
         ) : (
-          <Link to="/auth" className="hover:text-gray-400">Login/Register</Link>
+          <Link to="/auth"
+                state={{ from: location.pathname }} // Auth sayfasına geldiği yer bilgisini aktar
+                className="hover:text-gray-400">Login/Register
+          </Link>
+          
         )}
       </div>
     </nav>

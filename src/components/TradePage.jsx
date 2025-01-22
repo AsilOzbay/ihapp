@@ -20,14 +20,40 @@ ChartJS.register(
 );
 
 const TradePage = ({ crypto, onBack }) => {
+  // State for trade actions
   const [quantity, setQuantity] = useState(0);
   const [price, setPrice] = useState(crypto?.price || 0);
   const [action, setAction] = useState("");
   const [message, setMessage] = useState("");
+  
+  // State for portfolio management
+  const [portfolios, setPortfolios] = useState([]); // List of portfolios
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState(""); // Selected portfolio ID
+
+  // Chart state
   const [chartData, setChartData] = useState(null);
-  const [yAxisRange, setYAxisRange] = useState(null); // We'll set once and not depend on it in useEffect
+  const [yAxisRange, setYAxisRange] = useState(null); // Fixed y-axis range
+
+  
+  // Fetch Portfolios
+  useEffect(() => {
+    // Fetch user's portfolios from the server
+    const fetchPortfolios = async () => {
+      try {
+        const userId = JSON.parse(localStorage.getItem("user")).id;
+        const response = await fetch(`http://localhost:5000/portfolios?userId=${userId}`);
+        const data = await response.json();
+        setPortfolios(data);
+      } catch (error) {
+        console.error("Error fetching portfolios:", error);
+      }
+    };
+
+    fetchPortfolios();
+  }, []);
 
   useEffect(() => {
+    // Fetch chart data for the crypto
     const fetchGraphData = async () => {
       try {
         const response = await fetch(
@@ -38,12 +64,10 @@ const TradePage = ({ crypto, onBack }) => {
         const prices = data.map((point) => point.price);
         const times = data.map((point) => point.time);
 
-        // Set the Y-axis range (only once, so no re-render loop)
         const minPrice = Math.min(...prices) * 0.9; // 10% below the lowest price
         const maxPrice = Math.max(...prices) * 1.1; // 10% above the highest price
         setYAxisRange({ min: minPrice, max: maxPrice });
 
-        // Prepare chart data
         setChartData({
           labels: times,
           datasets: [
@@ -57,17 +81,22 @@ const TradePage = ({ crypto, onBack }) => {
           ],
         });
       } catch (error) {
-        console.error("Error fetching graph data:", error.message);
+        console.error("Error fetching graph data:", error);
       }
     };
 
     fetchGraphData();
-  }, [crypto.symbol]); 
-  // NOTE: Only depend on 'crypto.symbol' so we don't continuously recalc yAxisRange
+  }, [crypto.symbol]); // Depend only on crypto.symbol
 
+  // Handle Trade
   const handleTrade = async () => {
     if (!action) {
       setMessage("Please select Buy or Sell.");
+      return;
+    }
+
+    if (!selectedPortfolioId) {
+      setMessage("Please select a portfolio.");
       return;
     }
 
@@ -78,23 +107,26 @@ const TradePage = ({ crypto, onBack }) => {
 
     const total = (quantity * price).toFixed(2);
     try {
-      const response = await fetch("http://localhost:5000/portfolio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol: crypto.symbol,
-          action,
-          quantity,
-          price,
-          total,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/portfolio/${selectedPortfolioId}/transaction`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            symbol: crypto.symbol,
+            action,
+            quantity,
+            price,
+            total,
+          }),
+        }
+      );
 
       if (response.ok) {
         setMessage(
-          `Successfully ${
-            action === "buy" ? "bought" : "sold"
-          } ${quantity} ${crypto.symbol} at $${price} each.`
+          `Successfully ${action === "buy" ? "bought" : "sold"} ${quantity} ${
+            crypto.symbol
+          } at $${price} each.`
         );
       } else {
         setMessage("Failed to execute the transaction.");
@@ -107,6 +139,7 @@ const TradePage = ({ crypto, onBack }) => {
 
   if (!crypto) return null;
 
+
   return (
     <div className="bg-gray-100 min-h-screen p-6">
       <button
@@ -117,7 +150,7 @@ const TradePage = ({ crypto, onBack }) => {
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Crypto Details */}
+        {/* Crypto Details Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-1">
           <h1 className="text-2xl font-bold mb-4">{crypto.symbol}</h1>
           <p className="text-xl font-semibold mb-4 text-green-500">
@@ -146,9 +179,26 @@ const TradePage = ({ crypto, onBack }) => {
           </div>
         </div>
 
-        {/* Buy/Sell Section */}
+        {/* Portfolio Selection and Trade Form */}
         <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
           <h2 className="text-lg font-bold mb-4">Trade {crypto.symbol}</h2>
+
+          {/* Portfolio Selection Dropdown */}
+          <label className="block text-sm font-bold mb-2">Select Portfolio</label>
+          <select
+            className="border rounded px-3 py-2 mb-4 w-full"
+            value={selectedPortfolioId}
+            onChange={(e) => setSelectedPortfolioId(e.target.value)}
+          >
+            <option value="">-- Select Portfolio --</option>
+            {portfolios.map((portfolio) => (
+              <option key={portfolio._id} value={portfolio._id}>
+                {portfolio.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Trade Input Fields */}
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-bold mb-2">Action</label>

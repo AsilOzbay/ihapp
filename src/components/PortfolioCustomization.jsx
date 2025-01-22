@@ -1,195 +1,206 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import boyAvatar from "../assets/images/boy_3984629.png";
 import girlAvatar from "../assets/images/girl_3984664.png";
 
-const PortfolioCustomization = () => {
-  const [isModalOpen, setModalOpen] = useState(false); // Modal durumu
-  const [portfolioName, setPortfolioName] = useState(""); // Portfolio adı durumu
-  const [selectedAvatar, setSelectedAvatar] = useState(boyAvatar); // Başlangıç avatarı
-  const [isChangeAvatar, setChangeAvatar] = useState(false); // Avatar değiştirme durumu
-  const [isPortfolioCreated, setPortfolioCreated] = useState(false); // Portföy oluşturma durumu
-  const [createdPortfolioName, setCreatedPortfolioName] = useState(""); // Oluşturulan portföy adı
+const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
+  const [portfolioName, setPortfolioName] = useState(portfolio?.name || "");
+  const [selectedAvatar, setSelectedAvatar] = useState(portfolio?.avatar || boyAvatar);
+  const [transactions, setTransactions] = useState(portfolio?.transactions || []);
+  const [isEditingTransaction, setEditingTransaction] = useState(null);
+  const [isLoading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const openModal = () => {
-    setModalOpen(true);
+  useEffect(() => {
+    if (portfolio) {
+      setPortfolioName(portfolio.name);
+      setSelectedAvatar(portfolio.avatar || boyAvatar);
+      setTransactions(portfolio.transactions || []);
+    }
+  }, [portfolio]);
+
+  const savePortfolio = async () => {
+    if (!portfolioName.trim()) {
+      setMessage("Portfolio name is required.");
+      return;
+    }
+
+    setLoading(true);
+    const endpoint = portfolio
+      ? `http://localhost:5000/portfolio/${portfolio._id}`
+      : "http://localhost:5000/create-portfolio";
+
+    const method = portfolio ? "PUT" : "POST";
+
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          name: portfolioName,
+          avatar: selectedAvatar,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setMessage("Portfolio saved successfully!");
+        onBack(); // Return to portfolio list after saving
+      } else {
+        setMessage(result.message || "Error saving portfolio.");
+      }
+    } catch (error) {
+      console.error("Error saving portfolio:", error);
+      setMessage("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const closeModal = () => {
-    setModalOpen(false);
-    setPortfolioName(""); // Modal kapatıldığında input temizlenir
-    setChangeAvatar(false);
+  const addTransaction = async (transaction) => {
+    try {
+      const response = await fetch(`http://localhost:5000/portfolio/${portfolio._id}/transaction`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(transaction),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setTransactions(result.portfolio.transactions);
+      } else {
+        console.error("Failed to add transaction:", result.message);
+      }
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+    }
   };
 
-  const handleNameChange = (e) => {
-    setPortfolioName(e.target.value);
+  const deleteTransaction = async (transactionId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/portfolio/${portfolio._id}/transaction/${transactionId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+        setTransactions(result.transactions); // Update the list
+        setMessage("Transaction deleted successfully!");
+      } else {
+        console.error("Failed to delete transaction:", result.message);
+      }
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+    }
   };
 
-  const handleAvatarChange = (avatar) => {
-    setSelectedAvatar(avatar);
-    setChangeAvatar(false);
+  const editTransaction = (transaction) => {
+    setEditingTransaction(transaction);
   };
 
-  const createPortfolio = () => {
-    if (portfolioName.trim()) {
-      setPortfolioCreated(true); // Portföyün oluşturulmuş olduğunu işaretle
-      setCreatedPortfolioName(portfolioName); // Oluşturulan portföy adını kaydet
-      closeModal(); // Modalı kapat
+  const handleEditSubmit = async (editedTransaction) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/portfolio/${portfolio._id}/transaction/${editedTransaction._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editedTransaction),
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+        setTransactions(result.transactions);
+        setEditingTransaction(null); // Exit editing mode
+      } else {
+        console.error("Failed to update transaction:", result.message);
+      }
+    } catch (error) {
+      console.error("Error updating transaction:", error);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
-      {!isPortfolioCreated ? (
-        <>
-          {/* Portföy oluşturma giriş ekranı */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">
-              Let’s get started with your first portfolio!
-            </h1>
-            <p className="text-gray-600">
-              Track profits, losses, and valuation all in one place.
-            </p>
-            <div className="mt-8 w-full max-w-xl">
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <h2 className="text-lg font-semibold mb-2">Add Transactions Manually</h2>
-                <p className="text-sm text-gray-600">
-                  Enter all transaction details at your own pace to track your portfolio.
-                </p>
-                <button
-                  onClick={openModal}
-                  className="mt-4 bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
-                >
-                  Add Transactions
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        // Portföy detay ekranı
-        <div className="w-full max-w-5xl">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">My Portfolio</h1>
-            <button
-              onClick={openModal}
-              className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600"
-            >
-              + Create Another Portfolio
-            </button>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center mb-6">
-              <img
-                src={selectedAvatar}
-                alt="Avatar"
-                className="w-16 h-16 rounded-full mr-4"
-              />
-              <div>
-                <h2 className="text-2xl font-bold">{createdPortfolioName}</h2> {/* Oluşturulan portföy adı */}
-                <p className="text-gray-600">$0</p>
-              </div>
-            </div>
-            <p className="text-gray-600">
-              This portfolio needs some final touches...
-            </p>
-            <button className="mt-4 bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600">
-              + Add Transaction
-            </button>
+      <button onClick={onBack} className="mb-6 bg-gray-500 text-white px-4 py-2 rounded">
+        Back
+      </button>
+      <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">
+          {portfolio ? "Edit Portfolio" : "Create Portfolio"}
+        </h2>
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">Portfolio Name</label>
+          <input
+            type="text"
+            value={portfolioName}
+            onChange={(e) => setPortfolioName(e.target.value)}
+            className="border rounded w-full px-3 py-2"
+            placeholder="Enter portfolio name"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">Select Avatar</label>
+          <div className="flex space-x-4">
+            <img
+              src={boyAvatar}
+              alt="Boy Avatar"
+              className={`w-16 h-16 rounded-full cursor-pointer ${
+                selectedAvatar === boyAvatar ? "ring-2 ring-blue-500" : ""
+              }`}
+              onClick={() => setSelectedAvatar(boyAvatar)}
+            />
+            <img
+              src={girlAvatar}
+              alt="Girl Avatar"
+              className={`w-16 h-16 rounded-full cursor-pointer ${
+                selectedAvatar === girlAvatar ? "ring-2 ring-blue-500" : ""
+              }`}
+              onClick={() => setSelectedAvatar(girlAvatar)}
+            />
           </div>
         </div>
-      )}
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
-            <button
-              onClick={closeModal}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-            >
-              &times;
-            </button>
-            {!isChangeAvatar ? (
-              // İlk modal - Avatar seçme
-              <>
-                <h2 className="text-2xl font-bold mb-4">Create Portfolio</h2>
-                <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Portfolio Avatar</label>
-                  <div className="flex items-center">
-                    <img
-                      src={selectedAvatar}
-                      alt="Avatar"
-                      className="w-12 h-12 rounded-full mr-4"
-                    />
-                    <button
-                      onClick={() => setChangeAvatar(true)} // Avatar değiştirme ekranını aç
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    >
-                      Change
-                    </button>
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Portfolio Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter your portfolio name"
-                    value={portfolioName}
-                    onChange={handleNameChange}
-                    className="w-full border rounded px-3 py-2"
-                    maxLength={24}
-                  />
-                  <p className="text-gray-500 text-sm mt-1">
-                    {portfolioName.length}/24 characters
-                  </p>
-                </div>
+        <button
+          onClick={savePortfolio}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"
+          disabled={isLoading}
+        >
+          {isLoading ? "Saving..." : "Save Portfolio"}
+        </button>
+        {message && <p className="mt-4 text-center text-green-600">{message}</p>}
+      </div>
+
+      {portfolio && (
+        <div className="mt-8 w-full max-w-2xl bg-white p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-bold mb-4">Transactions</h3>
+          {transactions.map((transaction) => (
+            <div key={transaction._id} className="border-b py-2 flex justify-between items-center">
+              <p>
+                {transaction.action.toUpperCase()} {transaction.quantity} {transaction.symbol} @ $
+                {transaction.price.toFixed(2)}
+              </p>
+              <div className="space-x-2">
                 <button
-                  onClick={createPortfolio}
-                  className={`px-4 py-2 rounded w-full ${
-                    portfolioName.trim()
-                      ? "bg-blue-500 text-white hover:bg-blue-600"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                  disabled={!portfolioName.trim()}
+                  onClick={() => editTransaction(transaction)}
+                  className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
                 >
-                  Create Portfolio
+                  Edit
                 </button>
-              </>
-            ) : (
-              // Avatar değiştirme ekranı
-              <>
-                <h2 className="text-2xl font-bold mb-4">Change Avatar</h2>
-                <p className="text-gray-600 mb-4">
-                  How are you feeling about this portfolio?
-                </p>
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  {/* Avatar seçim butonları */}
-                  <img
-                    src={boyAvatar}
-                    alt="Boy Avatar"
-                    className={`w-16 h-16 rounded-full cursor-pointer hover:ring-2 hover:ring-blue-500 ${
-                      selectedAvatar === boyAvatar ? "ring-2 ring-blue-500" : ""
-                    }`}
-                    onClick={() => handleAvatarChange(boyAvatar)}
-                  />
-                  <img
-                    src={girlAvatar}
-                    alt="Girl Avatar"
-                    className={`w-16 h-16 rounded-full cursor-pointer hover:ring-2 hover:ring-blue-500 ${
-                      selectedAvatar === girlAvatar ? "ring-2 ring-blue-500" : ""
-                    }`}
-                    onClick={() => handleAvatarChange(girlAvatar)}
-                  />
-                </div>
                 <button
-                  onClick={() => setChangeAvatar(false)}
-                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"
+                  onClick={() => deleteTransaction(transaction._id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                 >
-                  Save
+                  Delete
                 </button>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

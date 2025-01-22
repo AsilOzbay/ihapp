@@ -9,10 +9,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const User = require('./models/User');
+const Portfolio = require('./models/Portfolio');
+
 
 // -------------------- CONFIG --------------------
 dotenv.config();
-
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -279,6 +280,143 @@ app.get('/crypto-data', async (req, res) => {
       res.status(500).json({ message: 'Error fetching crypto data' });
     }
   });
+
+// -------------------- Portfolio --------------------
+
+
+
+
+  app.post('/create-portfolio', async (req, res) => {
+    console.log(`islem eklendi`);
+    const { userId, name, avatar } = req.body;
+  
+    if (!userId || !name) {
+      return res.status(400).json({ message: 'userId and name are required' });
+    }
+  
+    try {
+      const portfolio = new Portfolio({
+        userId,
+        name,
+        avatar,
+        transactions: [],
+      });
+  
+      await portfolio.save();
+      res.status(201).json({ message: 'Portfolio created successfully', portfolio });
+    } catch (error) {
+      res.status(500).json({ message: 'Error creating portfolio', error: error.message });
+    }
+  });
+
+  app.post('/portfolio/:id/transaction', async (req, res) => {
+    const { id } = req.params; // Portfolio ID
+    const { symbol, action, quantity, price } = req.body;
+  
+    // Validate input
+    if (!symbol || !action || !quantity || !price) {
+      return res.status(400).json({ message: 'All fields are required: symbol, action, quantity, price' });
+    }
+  
+    try {
+      const total = quantity * price; // Calculate the total value of the transaction
+      if (quantity <= 0 || price <= 0) {
+        return res.status(400).json({ message: 'Quantity and price must be positive numbers' });
+      }
+      
+      if (!['buy', 'sell'].includes(action)) {
+        return res.status(400).json({ message: 'Action must be either "buy" or "sell"' });
+      }
+      // Find the portfolio by ID and update it
+      const portfolio = await Portfolio.findById(id);
+  
+      if (!portfolio) {
+        return res.status(404).json({ message: 'Portfolio not found' });
+      }
+  
+      // Add the transaction to the portfolio
+      portfolio.transactions.push({
+        symbol,
+        action,
+        quantity,
+        price,
+        total,
+      });
+  
+
+      // Save the updated portfolio
+      await portfolio.save();
+  
+      res.status(201).json({ message: 'Transaction added successfully', portfolio });
+    } catch (error) {
+      res.status(500).json({ message: 'Error adding transaction', error: error.message });
+    }
+  });
+
+
+  app.put('/portfolio/:portfolioId/transaction/:transactionId', async (req, res) => {
+    const { portfolioId, transactionId } = req.params;
+    const { symbol, action, quantity, price } = req.body;
+  
+    if (!symbol || !action || !quantity || !price) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+  
+    try {
+      const portfolio = await Portfolio.findById(portfolioId);
+      if (!portfolio) {
+        return res.status(404).json({ message: 'Portfolio not found.' });
+      }
+  
+      const transaction = portfolio.transactions.id(transactionId);
+      if (!transaction) {
+        return res.status(404).json({ message: 'Transaction not found.' });
+      }
+  
+      transaction.symbol = symbol;
+      transaction.action = action;
+      transaction.quantity = quantity;
+      transaction.price = price;
+      transaction.total = quantity * price;
+  
+      await portfolio.save();
+      res.status(200).json({ message: 'Transaction updated successfully.', transactions: portfolio.transactions });
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating transaction', error: error.message });
+    }
+  });
+
+  app.delete('/portfolio/:id', async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      const portfolio = await Portfolio.findByIdAndDelete(id);
+      if (!portfolio) {
+        return res.status(404).json({ message: 'Portfolio not found.' });
+      }
+      res.status(200).json({ message: 'Portfolio deleted successfully.' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error deleting portfolio', error: error.message });
+    }
+  });
+
+  app.get('/portfolios', async (req, res) => {
+    console.log("portfolios")
+    const { userId } = req.query;
+
+  
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required.' });
+    }
+  
+    try {
+      const portfolios = await Portfolio.find({ userId });
+      res.status(200).json(portfolios);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching portfolios', error: error.message });
+    }
+  });
+
 
 // -------------------- START SERVER --------------------
 app.listen(PORT, () => {

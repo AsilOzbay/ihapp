@@ -12,18 +12,23 @@ export default function Portfolio() {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolio, setSelectedPortfolio] = useState(null);
 
+ // Fetch Portfolios
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Fetch user's portfolios from the server
+    const fetchPortfolios = async () => {
+      try {
+        const userId = JSON.parse(localStorage.getItem("user")).id;
+        const response = await fetch(`http://localhost:5000/portfolios?userId=${userId}`);
+        const data = await response.json();
+        setPortfolios(data);
+      } catch (error) {
+        console.error("Error fetching portfolios:", error);
+      }
+    };
 
-    // Example portfolios (replace with actual API data)
-    setPortfolios([
-      { _id: "1", name: "My First Portfolio", transactions: [] },
-      { _id: "2", name: "Crypto Investments", transactions: [] },
-    ]);
+    fetchPortfolios();
   }, []);
+
 
   const handleCreatePortfolio = () => {
     if (user) {

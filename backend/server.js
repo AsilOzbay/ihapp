@@ -417,6 +417,91 @@ app.get('/crypto-data', async (req, res) => {
     }
   });
 
+  app.post('/portfolio/:id/transaction', async (req, res) => {
+    const { id } = req.params;
+    const { symbol, action, quantity, price } = req.body;
+  
+    if (!symbol || !action || !quantity || !price) {
+      return res.status(400).json({ message: 'All fields are required: symbol, action, quantity, price' });
+    }
+  
+    try {
+      const total = quantity * price;
+      if (quantity <= 0 || price <= 0) {
+        return res.status(400).json({ message: 'Quantity and price must be positive numbers' });
+      }
+  
+      if (!['buy', 'sell'].includes(action)) {
+        return res.status(400).json({ message: 'Action must be either "buy" or "sell"' });
+      }
+  
+      const portfolio = await Portfolio.findById(id);
+      if (!portfolio) {
+        return res.status(404).json({ message: 'Portfolio not found' });
+      }
+  
+      const newTransaction = {
+        symbol,
+        action,
+        quantity,
+        price,
+        total,
+        date: new Date(), // Add timestamp
+      };
+  
+      portfolio.transactions.push(newTransaction);
+      await portfolio.save();
+  
+      res.status(201).json({ message: 'Transaction added successfully', portfolio });
+    } catch (error) {
+      res.status(500).json({ message: 'Error adding transaction', error: error.message });
+    }
+  });
+  
+
+  const authenticateToken = (req, res, next) => {
+    const token = req.header('Authorization')?.split(' ')[1];
+  
+    if (!token) {
+      return res.status(401).json({ message: 'Access Denied: No Token Provided' });
+    }
+  
+    try {
+      const verified = jwt.verify(token, process.env.JWT_SECRET || 'secretkey');
+      req.user = verified; // Attach user data to the request object
+      next();
+    } catch (error) {
+      res.status(403).json({ message: 'Invalid Token' });
+    }
+  };
+  
+  app.get('/portfolios', authenticateToken, async (req, res) => {
+  const userId = req.user.id; // Use authenticated user ID
+
+  try {
+    const portfolios = await Portfolio.find({ userId }); // Fetch portfolios for the authenticated user
+    res.status(200).json(portfolios);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching portfolios', error: error.message });
+  }
+});
+
+// Fetch a single portfolio by ID
+app.get('/portfolio/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const portfolio = await Portfolio.findById(id);
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    res.status(200).json(portfolio);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching portfolio', error: error.message });
+  }
+});
+
+
 
 // -------------------- START SERVER --------------------
 app.listen(PORT, () => {

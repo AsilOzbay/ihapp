@@ -1,40 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
 import PortfolioCustomization from "../components/PortfolioCustomization";
+import PortfolioDetails from "../components/PortfolioDetails";
 
 export default function Portfolio() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [user, setUser] = useState(null); // User information
-  const [isCustomizationVisible, setCustomizationVisible] = useState(false); // Toggle customization view
-  const [portfolios, setPortfolios] = useState([]); // List of portfolios
-  const [selectedPortfolio, setSelectedPortfolio] = useState(null); // Selected portfolio for customization
+  const [isDetailsVisible, setDetailsVisible] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isCustomizationVisible, setCustomizationVisible] = useState(false);
+  const [portfolios, setPortfolios] = useState([]);
+  const [selectedPortfolio, setSelectedPortfolio] = useState(null);
 
   useEffect(() => {
-    // Fetch user info from localStorage
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-  }, []);
 
-  useEffect(() => {
-    if (user) {
-      // Fetch portfolios for the logged-in user
-      fetch(`http://localhost:5000/portfolios?userId=${user.id}`)
-        .then((response) => response.json())
-        .then((data) => setPortfolios(data))
-        .catch((error) => console.error("Error fetching portfolios:", error));
-    }
-  }, [user]);
+    // Example portfolios (replace with actual API data)
+    setPortfolios([
+      { _id: "1", name: "My First Portfolio", transactions: [] },
+      { _id: "2", name: "Crypto Investments", transactions: [] },
+    ]);
+  }, []);
 
   const handleCreatePortfolio = () => {
     if (user) {
-      setSelectedPortfolio(null); // Ensure no portfolio is selected
-      setCustomizationVisible(true); // Show customization view
+      setCustomizationVisible(true);
     } else {
-      navigate("/auth", { state: { from: location.pathname } }); // Redirect to login
+      navigate("/auth", { state: { from: location.pathname } });
     }
   };
 
@@ -47,13 +42,14 @@ export default function Portfolio() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow"></header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {!isCustomizationVisible ? (
+        {!isCustomizationVisible && !isDetailsVisible ? (
           <div className="text-center">
             <h2 className="text-4xl font-bold text-gray-800 mb-4">
               Crypto Portfolio Tracker
             </h2>
             <p className="text-gray-600 mb-8">
-              Keep track of your profits, losses, and portfolio valuation with our easy-to-use platform.
+              Keep track of your profits, losses, and portfolio valuation with
+              our easy-to-use platform.
             </p>
             <div className="space-x-4">
               <button
@@ -73,25 +69,43 @@ export default function Portfolio() {
                   >
                     <div>
                       <h4 className="text-lg font-bold">{portfolio.name}</h4>
-                      <p className="text-gray-600">Transactions: {portfolio.transactions.length}</p>
+                      <p className="text-gray-600">
+                        Transactions: {portfolio.transactions.length}
+                      </p>
                     </div>
-                    <button
-                      onClick={() => handleEditPortfolio(portfolio)}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                    >
-                      Edit
-                    </button>
+                    <div className="space-x-2">
+                      <button
+                        onClick={() => handleEditPortfolio(portfolio)}
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedPortfolio(portfolio);
+                          setDetailsVisible(true);
+                        }}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      >
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        ) : (
+        ) : isCustomizationVisible ? (
           <PortfolioCustomization
             portfolio={selectedPortfolio}
-            userId={user.id}
+            userId={user?.id}
             onBack={() => setCustomizationVisible(false)}
           />
+        ) : (
+          <PortfolioDetails
+  portfolioId={selectedPortfolio?._id}
+  onBack={() => setDetailsVisible(false)}
+/>
         )}
       </main>
     </div>

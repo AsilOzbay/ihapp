@@ -12,15 +12,20 @@ export default function Portfolio() {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolio, setSelectedPortfolio] = useState(null);
 
- // Fetch Portfolios
+  // Fetch Portfolios
   useEffect(() => {
     // Fetch user's portfolios from the server
     const fetchPortfolios = async () => {
       try {
-        const userId = JSON.parse(localStorage.getItem("user")).id;
-        const response = await fetch(`http://localhost:5000/portfolios?userId=${userId}`);
-        const data = await response.json();
-        setPortfolios(data);
+        const userData = JSON.parse(localStorage.getItem("user"));
+        if (userData) {
+          setUser(userData);
+          const response = await fetch(
+            `http://localhost:5000/portfolios?userId=${userData.id}`
+          );
+          const data = await response.json();
+          setPortfolios(data);
+        }
       } catch (error) {
         console.error("Error fetching portfolios:", error);
       }
@@ -28,7 +33,6 @@ export default function Portfolio() {
 
     fetchPortfolios();
   }, []);
-
 
   const handleCreatePortfolio = () => {
     if (user) {
@@ -108,9 +112,9 @@ export default function Portfolio() {
           />
         ) : (
           <PortfolioDetails
-  portfolioId={selectedPortfolio?._id}
-  onBack={() => setDetailsVisible(false)}
-/>
+            portfolioId={selectedPortfolio?._id}
+            onBack={() => setDetailsVisible(false)}
+          />
         )}
       </main>
     </div>

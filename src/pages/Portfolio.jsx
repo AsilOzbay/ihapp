@@ -68,6 +68,7 @@ export default function Portfolio() {
                 Create New Portfolio
               </button>
             </div>
+            {portfolios.length > 0 && (
             <div className="mt-12">
               <h3 className="text-2xl font-bold mb-6">Your Portfolios</h3>
               <div className="space-y-4">
@@ -103,7 +104,7 @@ export default function Portfolio() {
                 ))}
               </div>
             </div>
-          </div>
+          )}</div>
         ) : isCustomizationVisible ? (
           <PortfolioCustomization
             portfolio={selectedPortfolio}

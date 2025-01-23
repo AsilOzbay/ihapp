@@ -29,6 +29,7 @@ const Auth = () => {
         alert(`Login successful! Welcome, ${res.data.user.firstName} ${res.data.user.lastName}`);
         if (from === "/portfolio") {
           navigate(from); // Eğer 'auth' sayfasından gelindiyse Home'a yönlendir
+          window.location.reload();
         } else {
           navigate("/"); // Eğer başka bir sayfadan gelindiyse oraya yönlendir
           window.location.reload();

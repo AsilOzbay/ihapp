@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const UserSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -22,7 +21,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 6
-  }
+  },
+twoFactorCode: {
+   type: String,
+   default: null,
+    },
+ twoFactorCodeExpires: {
+   type: Date,
+   default: null,
+ },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

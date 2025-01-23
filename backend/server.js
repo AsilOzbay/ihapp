@@ -10,10 +10,30 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const User = require('./models/User');
 const Portfolio = require('./models/Portfolio');
+const nodemailer = require('nodemailer');
+
+
 
 
 // -------------------- CONFIG --------------------
 dotenv.config();
+const transporter = nodemailer.createTransport({
+     host: 'smtp.office365.com',
+     port: 587,
+     secure: false, // if you use TLS with port 587
+     auth: {
+      user: 'investinghub2025@hotmail.com',     // e.g. "investinghub2025@hotmail.com"
+       pass: 'fferplakdablmmmy', // e.g. "SomeAppSpecificPassword"
+     },
+     
+   });
+transporter.verify((err, success) => {
+    if (err) {
+      console.error('SMTP Connection Error:', err);
+    } else {
+      console.log('SMTP is ready to take messages');
+    }
+  });
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -76,26 +96,97 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Create token
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET || 'secretkey',
-      { expiresIn: '1h' }
-    );
+    // STEP 1: Generate a 6-digit 2FA code
+   const twoFactorCode = generate2FACode();
 
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-      },
-    });
+   // STEP 2: Set expiration time for 2FA code (e.g., 5 min from now)
+   const expires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+   // STEP 3: Update user in the database
+   user.twoFactorCode = twoFactorCode;
+   user.twoFactorCodeExpires = expires;
+   await user.save();
+
+   // STEP 4: Send code via email using our transporter
+   const mailOptions = {
+     from: process.env.EMAIL_USER,   // e.g. "investinghub2025@hotmail.com"
+     to: user.email,                 // the user's email
+     subject: 'Your 2FA Code',
+     text: `Your 2FA code is: ${twoFactorCode}\nThis code will expire in 5 minutes.`,
+   };
+
+  try {
+     await transporter.sendMail(mailOptions);
+     console.log(`2FA code sent to ${user.email}`);
+   } catch (error) {
+     console.error('Error sending 2FA email:', error.message);
+     console.error('Full error object:', error);
+     // Optionally handle email errors, e.g. revert changes, return error
+   }
+
+   // STEP 5: Return a response telling the user to verify the code
+   res.json({
+     message: '2FA code sent to your email. Please verify to complete login.',
+     userId: user._id,  // We'll need the userId to know which account we’re verifying
+   });
   } catch (err) {
     res.status(500).json({ message: 'Error logging in', error: err.message });
   }
 });
+
+
+ app.post('/verify-2fa', async (req, res) => {
+     try {
+       const { userId, code } = req.body;
+       if (!userId || !code) {
+         return res.status(400).json({ message: 'userId and code are required.' });
+       }
+  
+       // 1) Find the user
+       const user = await User.findById(userId);
+       if (!user) {
+         return res.status(404).json({ message: 'User not found.' });
+       }
+  
+       // 2) Check if code matches and not expired
+       const now = new Date();
+       if (
+        user.twoFactorCode !== code ||
+         !user.twoFactorCodeExpires ||
+         user.twoFactorCodeExpires < now
+       ) {
+         return res.status(400).json({ message: 'Invalid or expired code.' });
+       }  
+       // 3) If valid, create the JWT
+       const token = jwt.sign(
+         { id: user._id },
+         process.env.JWT_SECRET || 'secretkey',
+         { expiresIn: '1h' }
+       );
+  
+       // 4) Clear the code from the DB (so user can’t re-use it)
+       user.twoFactorCode = null;
+       user.twoFactorCodeExpires = null;
+       await user.save();
+  
+       // 5) Return the token + user data
+       res.json({
+         message: '2FA verification successful.',
+         token,
+         user: {
+           id: user._id,
+           firstName: user.firstName,
+           lastName: user.lastName,
+           email: user.email,
+         },
+       });
+     } catch (err) {
+       res.status(500).json({ message: 'Error verifying 2FA', error: err.message });
+     }
+   });
+  
+
+
 
 // -------------------- CRYPTO DATA FETCHING --------------------
 // Cache variables
@@ -501,6 +592,12 @@ app.get('/portfolio/:id', async (req, res) => {
   }
 });
 
+// -------------------- 2FA --------------------
+
+function generate2FACode() {
+    // Returns a 6-digit string, e.g. "123456"
+    return Math.floor(100000 + Math.random() * 900000).toString();
+   }
 
 
 // -------------------- START SERVER --------------------

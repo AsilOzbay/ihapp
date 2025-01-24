@@ -216,37 +216,144 @@ const fetchCryptoData = async () => {
       cachedCryptoData = responses.map((response) => ({
         symbol: response.data.symbol.replace('USDT', ''),
         price: parseFloat(response.data.lastPrice),
-        change: parseFloat(response.data.priceChangePercent),
+        dailyChange: parseFloat(response.data.priceChangePercent), // daily % change
         volume: parseFloat(response.data.volume),
         highPrice: parseFloat(response.data.highPrice),
         lowPrice: parseFloat(response.data.lowPrice),
+  
+        // 2) We'll initialize weeklyChange & monthlyChange to 0 for now
+        weeklyChange: 0,
+        monthlyChange: 0,
       }));
   
       console.log('Crypto data fetched successfully for 30 symbols.');
+  
+      // 3) Now we iterate each coin and fetch weekly/monthly changes
+      //    NOTE: This could cause up to 60 calls (for 30 coins weekly+monthly).
+      //    If that's acceptable, keep this here.
+      //    Otherwise, consider calling fetchWeeklyChange/fetchMonthlyChange
+      //    less frequently (e.g. in a separate function or on a schedule).
+      for (let coin of cachedCryptoData) {
+        const binanceSymbol = coin.symbol + 'USDT';
+        try {
+          // Fetch weekly and monthly changes only once and store in cache
+          const [weeklyChange, monthlyChange] = await Promise.all([
+            fetchWeeklyChange(binanceSymbol),
+            fetchMonthlyChange(binanceSymbol),
+          ]);
+          coin.weeklyChange = weeklyChange;
+          coin.monthlyChange = monthlyChange;
+        } catch (error) {
+          console.error(`Failed to fetch weekly/monthly for ${binanceSymbol}`, error.message);
+        }
+      }
+  
     } catch (error) {
       console.error('Error fetching crypto data:', error.message);
     }
   };
 
-// Fetch trending coins (You can keep this shorter or also expand)
+// --------------------------------------------------------
+// PART 2: Add or replace endpoints for multi-timeframe
+// Insert around line ~290 or so, near your other CRYPTO endpoints.
+// --------------------------------------------------------
+
+
+// ---------------------------------------------------------------------
+// NEW: /gainers endpoint with "rename" logic for coin.change
+// ---------------------------------------------------------------------
+app.get('/gainers', async (req, res) => {
+  try {
+    const timeframe = req.query.timeframe || 'daily';
+
+    let sortField;
+    if (timeframe === 'weekly') {
+      sortField = 'weeklyChange';
+    } else if (timeframe === 'monthly') {
+      sortField = 'monthlyChange';
+    } else {
+      // default daily
+      sortField = 'dailyChange';
+    }
+
+    // Sort the coins DESCENDING by the chosen field
+    const sorted = [...cachedCryptoData].sort((a, b) => b[sortField] - a[sortField]);
+
+    // Grab top 5
+    const top5Gainers = sorted.slice(0, 5);
+
+    // Rename the correct timeframe field into coin.change (for the front-end)
+    top5Gainers.forEach((coin) => {
+      coin.change = coin[sortField]; 
+      // e.g. coin.change = coin.dailyChange if timeframe='daily'
+      // coin.change = coin.weeklyChange if 'weekly'
+      // coin.change = coin.monthlyChange if 'monthly'
+    });
+
+    return res.json({
+      timeframe,
+      data: top5Gainers,
+    });
+  } catch (error) {
+    console.error('Error in /gainers:', error.message);
+    return res.status(500).json({ message: 'Failed to get gainers' });
+  }
+});
+
+
+app.get('/losers', async (req, res) => {
+  try {
+    const timeframe = req.query.timeframe || 'daily';
+
+    let sortField;
+    if (timeframe === 'weekly') {
+      sortField = 'weeklyChange';
+    } else if (timeframe === 'monthly') {
+      sortField = 'monthlyChange';
+    } else {
+      // default daily
+      sortField = 'dailyChange';
+    }
+
+    // Sort ascending
+    const sorted = [...cachedCryptoData].sort((a, b) => a[sortField] - b[sortField]);
+    const top5Losers = sorted.slice(0, 5);
+
+    top5Losers.forEach((coin) => {
+      coin.change = coin[sortField];
+    });
+
+    return res.json({
+      timeframe,
+      data: top5Losers,
+    });
+  } catch (error) {
+    console.error('Error in /losers:', error.message);
+    return res.status(500).json({ message: 'Failed to get losers' });
+  }
+});
+
+
+
+// This version sorts the 30 coins by 24hr change (descending) and picks top 5
 const fetchTrendingCoins = async () => {
   try {
-    const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
-    const requests = symbols.map((symbol) =>
-      axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
-    );
-    const responses = await Promise.all(requests);
+    // Make sure we have some data in cachedCryptoData
+    // If it's empty, fetch it once:
+    if (!cachedCryptoData || !cachedCryptoData.length) {
+      await fetchCryptoData(); // This fetches all 30 coins
+    }
+    
+    // Sort them by 'change' descending and take top 5
+    const sortedByGainers = [...cachedCryptoData].sort((a, b) => b.change - a.change);
+    cachedTrendingData = sortedByGainers.slice(0, 5);
 
-    cachedTrendingData = responses.map((response) => ({
-      symbol: response.data.symbol.replace('USDT', ''),
-      price: parseFloat(response.data.lastPrice),
-      change: parseFloat(response.data.priceChangePercent),
-    }));
-    console.log('Trending coins fetched successfully.');
+    console.log('Top 5 daily gainers set in cachedTrendingData');
   } catch (error) {
     console.error('Error fetching trending coins:', error.message);
   }
 };
+
 
 // Fetch top exchanges (static data for now)
 const fetchTopExchanges = async () => {
@@ -271,12 +378,20 @@ fetchAllData();
 
 // -------------------- CRYPTO ENDPOINTS --------------------
 app.get('/crypto-data', (req, res) => {
-  res.json({ data: cachedCryptoData, lastUpdated: lastFetchTime });
+  // Return cached data with all change rates included
+  res.json({
+    data: cachedCryptoData.map((coin) => ({
+      symbol: coin.symbol,
+      price: coin.price,
+      dailyChange: coin.dailyChange,
+      weeklyChange: coin.weeklyChange,
+      monthlyChange: coin.monthlyChange,
+      volume: coin.volume,
+    })),
+    lastUpdated: lastFetchTime,
+  });
 });
 
-app.get('/trending-coins', (req, res) => {
-  res.json({ data: cachedTrendingData });
-});
 
 app.get('/top-exchanges', (req, res) => {
   res.json({ data: cachedExchangesData });
@@ -288,8 +403,84 @@ app.get('/refresh-data', async (req, res) => {
   res.json({ message: 'Data refreshed successfully.' });
 });
 
-// -------------------- GRAPH/HISTORICAL DATA --------------------
-const historicalDataCache = {};
+// This will take our 30 cached coins and pick the 5 with the *lowest* (most negative) daily change
+const fetchTopLosers = async () => {
+  try {
+    // If we haven't fetched the 30 coins yet, do so:
+    if (!cachedCryptoData || !cachedCryptoData.length) {
+      await fetchCryptoData();
+    }
+
+    // Sort ascending by % change:
+    const sorted = [...cachedCryptoData].sort((a, b) => a.change - b.change);
+
+    // Take the first 5 (these will be the biggest losers):
+    cachedTopLosersData = sorted.slice(0, 5);
+    console.log('Top 5 daily losers set in cachedTopLosersData');
+  } catch (error) {
+    console.error('Error in fetchTopLosers:', error.message);
+  }
+};
+
+async function fetchWeeklyChange(symbol) {
+  try {
+    // Get 8 daily candles so we have 7 intervals
+    // (because we need the price from day0 close and day7 close)
+    const limit = 8; 
+    const interval = '1d';
+
+    const response = await axios.get(
+      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+    );
+
+    const klines = response.data; 
+    if (klines.length < 2) {
+      return 0; // Not enough data to compute weekly change
+    }
+
+    // First candle's close price
+    const firstClose = parseFloat(klines[0][4]);
+    // Last candle's close price (7 days later)
+    const lastClose = parseFloat(klines[klines.length - 1][4]);
+
+    // Calculate % change
+    const weeklyChange = ((lastClose - firstClose) / firstClose) * 100;
+    return weeklyChange;
+  } catch (error) {
+    console.error(`Error fetching weekly change for ${symbol}:`, error.message);
+    return 0;
+  }
+}
+
+
+async function fetchMonthlyChange(symbol) {
+  try {
+    // For 30 days, we fetch 31 daily candles
+    const limit = 31; 
+    const interval = '1d';
+
+    const response = await axios.get(
+      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+    );
+
+    const klines = response.data; 
+    if (klines.length < 2) {
+      return 0;
+    }
+
+    const firstClose = parseFloat(klines[0][4]);
+    const lastClose = parseFloat(klines[klines.length - 1][4]);
+    const monthlyChange = ((lastClose - firstClose) / firstClose) * 100;
+
+    return monthlyChange;
+  } catch (error) {
+    console.error(`Error fetching monthly change for ${symbol}:`, error.message);
+    return 0;
+  }
+}
+
+
+
 
 // Helper to fetch historical data from Binance
 const fetchHistoricalData = async (symbol, interval = '1m', limit = 20) => {
@@ -333,44 +524,7 @@ setInterval(async () => {
   console.log('Historical data refreshed.');
 }, 6000000); // every 6000 seconds
 
-app.get('/crypto-data', async (req, res) => {
-    const { timeframe = '1D' } = req.query; // Default to 1-day data
-    let interval;
-    
-    // Map timeframe to Binance interval
-    switch (timeframe) {
-      case '1H':
-        interval = '1m';
-        break;
-      case '1D':
-        interval = '1h';
-        break;
-      case '1W':
-        interval = '4h';
-        break;
-      case '1M':
-        interval = '1d';
-        break;
-      case '1Y':
-        interval = '1w';
-        break;
-      default:
-        interval = '1h';
-    }
-  
-    try {
-      const symbols = ['BTCUSDT', 'ETHUSDT', 'XRPUSDT'];
-      const requests = symbols.map((symbol) =>
-        fetchHistoricalData(symbol, interval, 20) // Use your helper
-      );
-      const data = await Promise.all(requests);
-  
-      res.json({ data, timeframe });
-    } catch (error) {
-      console.error('Error fetching crypto data:', error.message);
-      res.status(500).json({ message: 'Error fetching crypto data' });
-    }
-  });
+
 
 // -------------------- Portfolio --------------------
 

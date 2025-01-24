@@ -235,14 +235,10 @@ const fetchCryptoData = async () => {
       //    less frequently (e.g. in a separate function or on a schedule).
       for (let coin of cachedCryptoData) {
         const binanceSymbol = coin.symbol + 'USDT';
+        // try-catch inside so if one symbol fails, others continue
         try {
-          // Fetch weekly and monthly changes only once and store in cache
-          const [weeklyChange, monthlyChange] = await Promise.all([
-            fetchWeeklyChange(binanceSymbol),
-            fetchMonthlyChange(binanceSymbol),
-          ]);
-          coin.weeklyChange = weeklyChange;
-          coin.monthlyChange = monthlyChange;
+          coin.weeklyChange = await fetchWeeklyChange(binanceSymbol);
+          coin.monthlyChange = await fetchMonthlyChange(binanceSymbol);
         } catch (error) {
           console.error(`Failed to fetch weekly/monthly for ${binanceSymbol}`, error.message);
         }
@@ -497,7 +493,7 @@ const fetchHistoricalData = async (symbol, interval = '1m', limit = 20) => {
     return [];
   }
 };
-
+let historicalDataCache = {};
 // Endpoint to get graph data
 app.get('/graph-data/:symbol', async (req, res) => {
   const { symbol } = req.params;

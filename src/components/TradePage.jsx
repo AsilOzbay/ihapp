@@ -34,7 +34,11 @@ const TradePage = ({ crypto, onBack }) => {
   const [chartData, setChartData] = useState(null);
   const [yAxisRange, setYAxisRange] = useState(null); // Fixed y-axis range
 
-  
+  if (!crypto) {
+  console.log("No crypto selected. `crypto` is:", crypto);
+  return null;
+}
+console.log("TradePage received crypto:", crypto);
   // Fetch Portfolios
   useEffect(() => {
     // Fetch user's portfolios from the server

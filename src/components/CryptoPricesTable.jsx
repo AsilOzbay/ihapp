@@ -6,7 +6,7 @@ const CryptoPricesTable = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCrypto, setSelectedCrypto] = useState(null);
   const [searchQuery, setSearchQuery] = useState(""); // New state for search input
-
+  const [sortFields, setSortFields] = useState([]); 
   // Filters
   const [filters, setFilters] = useState({
     assetType: "All assets",
@@ -137,8 +137,16 @@ const CryptoPricesTable = () => {
 
   // If a crypto is selected, show the TradePage
   if (selectedCrypto) {
+    // As soon as user selects a crypto, show the TradePage
+    return <TradePage crypto={selectedCrypto} onBack={() => setSelectedCrypto(null)} />;
+  }
+  
+  if (loading) {
+    // Only show "Loading" if no crypto is currently selected
     return (
-      <TradePage crypto={selectedCrypto} onBack={() => setSelectedCrypto(null)} />
+      <div className="min-h-screen flex justify-center items-center">
+        <p>Loading...</p>
+      </div>
     );
   }
 
@@ -227,56 +235,71 @@ const CryptoPricesTable = () => {
     </th>
   </tr>
 </thead>
-        <tbody>
-        {cryptoData
-  .filter((item) =>
-    item.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-  .slice(0, filters.rowCount)
-  .map((item, index) => {
-            // Safely get numeric fields, or fallback to 0:
-            const rate = conversionRates[filters.currency] || 1;
-            const symbol = currencySymbols[filters.currency] || "";
+<tbody>
+  {cryptoData
+    .filter((item) => 
+      item.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .slice(0, filters?.rowCount || 10)
+    .map((item, index) => {
+      // Safely get numeric fields, or fallback to 0
+      const currency = filters?.currency || "USD";
+      const rate = conversionRates[currency] || 1;
+      const symbol = currencySymbols[currency] || "$";
 
-            const price = item.price !== undefined ? item.price : 0;
-            const change = item.change !== undefined ? item.change : 0;
-            const mktCap = item.mktCap !== undefined ? item.mktCap : 0;
-            const volume = item.volume !== undefined ? item.volume : 0;
+      const price = item.price != null ? item.price : 0;
+      const change = item.change != null ? item.change : 0;
+      const mktCap = item.mktCap != null ? item.mktCap : 0;
+      const volume = item.volume != null ? item.volume : 0;
 
-            // Convert to user-selected currency
-            const convertedPrice = price * rate;
-            const convertedMktCap = mktCap * rate;
-            const convertedVolume = volume * rate;
+      // Convert to user-selected currency
+      const convertedPrice = price * rate;
+      const convertedMktCap = mktCap * rate;
+      const convertedVolume = volume * rate;
 
-            return (
-              <tr key={index} className="border-t">
-  <td className="px-4 py-2">{item.symbol || "N/A"}</td>
-  <td className="px-4 py-2">
-    {symbol}
-    {convertedPrice.toLocaleString()}
-  </td>
-  <td className="px-4 py-2">Chart Placeholder</td>
-  <td className={`px-4 py-2 ${item.dailyChange > 0 ? "text-green-500" : "text-red-500"}`}>
-    {item.dailyChange.toFixed(2)}%
-  </td>
-  <td className={`px-4 py-2 ${item.weeklyChange > 0 ? "text-green-500" : "text-red-500"}`}>
-    {item.weeklyChange.toFixed(2)}%
-  </td>
-  <td className={`px-4 py-2 ${item.monthlyChange > 0 ? "text-green-500" : "text-red-500"}`}>
-    {item.monthlyChange.toFixed(2)}%
-  </td>
-  <td className="px-4 py-2">
-    <button
-      onClick={() => setSelectedCrypto(item)}
-      className="bg-blue-500 text-white px-3 py-1 rounded"
-    >
-      Trade
-    </button>
-  </td>
-</tr>
-            );
-          })}
-        </tbody>
+      // Safely format change values
+      const dailyChange = item.dailyChange != null ? item.dailyChange.toFixed(2) : "0.00";
+      const weeklyChange = item.weeklyChange != null ? item.weeklyChange.toFixed(2) : "0.00";
+      const monthlyChange = item.monthlyChange != null ? item.monthlyChange.toFixed(2) : "0.00";
+
+      return (
+        <tr key={item.symbol || index} className="border-t">
+          <td className="px-4 py-2">{item.symbol || "N/A"}</td>
+          <td className="px-4 py-2">
+            {symbol}
+            {convertedPrice.toLocaleString()}
+          </td>
+          <td className="px-4 py-2">Chart Placeholder</td>
+          <td className={`px-4 py-2 ${dailyChange > 0 ? "text-green-500" : "text-red-500"}`}>
+            {dailyChange}%
+          </td>
+          <td className={`px-4 py-2 ${weeklyChange > 0 ? "text-green-500" : "text-red-500"}`}>
+            {weeklyChange}%
+          </td>
+          <td className={`px-4 py-2 ${monthlyChange > 0 ? "text-green-500" : "text-red-500"}`}>
+            {monthlyChange}%
+          </td>
+          <td className="px-4 py-2">
+  <button
+    onClick={() => {
+      setSelectedCrypto({
+        ...item,
+        // Map dailyChange → change
+        change: item.dailyChange,
+        // If you want high/low in the trade page, pass them too
+        highPrice: item.highPrice ?? 0,
+        lowPrice: item.lowPrice ?? 0,
+      });
+    }}
+    className="bg-blue-500 text-white px-3 py-1 rounded"
+  >
+    Trade
+  </button>
+</td>
+        </tr>
+      );
+    })}
+</tbody>
       </table>
     </div>
   );

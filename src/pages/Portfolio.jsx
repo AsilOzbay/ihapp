@@ -47,6 +47,22 @@ export default function Portfolio() {
     setCustomizationVisible(true);
   };
 
+  // Portföyleri yeniden yüklemek için bir yardımcı fonksiyon
+const reloadPortfolios = async () => {
+  try {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (userData) {
+      const response = await fetch(
+        `http://localhost:5000/portfolios?userId=${userData.id}`
+      );
+      const data = await response.json();
+      setPortfolios(data);
+    }
+  } catch (error) {
+    console.error("Error fetching portfolios:", error);
+  }
+};
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow"></header>
@@ -109,12 +125,17 @@ export default function Portfolio() {
           <PortfolioCustomization
             portfolio={selectedPortfolio}
             userId={user?.id}
-            onBack={() => setCustomizationVisible(false)}
+            onBack={() =>{ setCustomizationVisible(false)
+              reloadPortfolios();
+            }}
+             // Portföyleri tekrar yükle
           />
         ) : (
           <PortfolioDetails
             portfolioId={selectedPortfolio?._id}
-            onBack={() => setDetailsVisible(false)}
+            onBack={() =>{ setDetailsVisible(false)
+              reloadPortfolios();
+            }} // Detaylardan döndükten sonra da portföyleri yükle
           />
         )}
       </main>

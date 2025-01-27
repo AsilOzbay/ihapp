@@ -17,23 +17,7 @@ const nodemailer = require('nodemailer');
 
 // -------------------- CONFIG --------------------
 dotenv.config();
-const transporter = nodemailer.createTransport({
-     host: 'smtp.office365.com',
-     port: 587,
-     secure: false, // if you use TLS with port 587
-     auth: {
-      user: 'investinghub2025@hotmail.com',     // e.g. "investinghub2025@hotmail.com"
-       pass: 'fferplakdablmmmy', // e.g. "SomeAppSpecificPassword"
-     },
-     
-   });
-transporter.verify((err, success) => {
-    if (err) {
-      console.error('SMTP Connection Error:', err);
-    } else {
-      console.log('SMTP is ready to take messages');
-    }
-  });
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -53,6 +37,8 @@ mongoose
 // -------------------- AUTH ENDPOINTS --------------------
 
 // Register
+const tempUsers = {};
+
 app.post('/register', async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -63,21 +49,90 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Email already exists' });
     }
 
-    // Hash the password
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+    // Hash the password (temporary storage)
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user
-    const newUser = new User({ firstName, lastName, email, password: hashedPassword });
-    await newUser.save();
+    // Temporary user storage in memory (could be replaced with Redis or similar storage)
+    tempUsers[email] = {
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      verificationCode,
+    };
 
-    res.status(201).json({ message: 'User registered successfully' });
+    // Nodemailer Configuration
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER, // Sender email address
+        pass: process.env.EMAIL_PASS, // App password or email password
+      },
+    });
+
+    // Email Options
+    const mailOptions = {
+      from: process.env.EMAIL_USER, // Sender address
+      to: email, // Recipient address
+      subject: 'Verify Your Email',
+      text: `Hello ${firstName},\n\nYour verification code is: ${verificationCode}\n\nThank you!`,
+    };
+
+    // Send Email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+        return res.status(500).json({ message: 'Error sending email', error });
+      }
+      console.log('Email sent:', info.response);
+      res.status(200).json({ message: 'Verification email sent successfully.' });
+    });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: 'Error registering user', error: err.message });
+    console.error("Error processing registration:", err.message);
+    res.status(500).json({ message: 'Error processing registration', error: err.message });
   }
 });
+
+app.post('/verify', async (req, res) => {
+  try {
+    const { email, verificationCode } = req.body;
+
+    // Check if the user exists in temp storage
+    const tempUser = tempUsers[email];
+    if (!tempUser) {
+      return res.status(400).json({ message: 'Verification expired or invalid email.' });
+    }
+
+    // Check if verification code matches
+    if (tempUser.verificationCode !== parseInt(verificationCode, 10)) {
+      return res.status(400).json({ message: 'Invalid verification code.' });
+    }
+
+    // Create user in the database
+    const newUser = new User({
+      firstName: tempUser.firstName,
+      lastName: tempUser.lastName,
+      email: tempUser.email,
+      password: tempUser.password,
+      isVerified: true,
+    });
+
+    await newUser.save();
+
+    // Remove the user from temporary storage
+    delete tempUsers[email];
+
+    res.status(201).json({ message: 'User verified and registered successfully.' });
+  } catch (err) {
+    console.error("Error verifying user:", err.message);
+    res.status(500).json({ message: 'Error verifying user', error: err.message });
+  }
+});
+
+
 
 // Login
 app.post('/login', async (req, res) => {
@@ -96,94 +151,30 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // STEP 1: Generate a 6-digit 2FA code
-   const twoFactorCode = generate2FACode();
+    // Create token
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || 'secretkey',
+      { expiresIn: '1h' }
+    );
 
-   // STEP 2: Set expiration time for 2FA code (e.g., 5 min from now)
-   const expires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      },
+    });
 
-   // STEP 3: Update user in the database
-   user.twoFactorCode = twoFactorCode;
-   user.twoFactorCodeExpires = expires;
-   await user.save();
-
-   // STEP 4: Send code via email using our transporter
-   const mailOptions = {
-     from: process.env.EMAIL_USER,   // e.g. "investinghub2025@hotmail.com"
-     to: user.email,                 // the user's email
-     subject: 'Your 2FA Code',
-     text: `Your 2FA code is: ${twoFactorCode}\nThis code will expire in 5 minutes.`,
-   };
-
-  try {
-     await transporter.sendMail(mailOptions);
-     console.log(`2FA code sent to ${user.email}`);
-   } catch (error) {
-     console.error('Error sending 2FA email:', error.message);
-     console.error('Full error object:', error);
-     // Optionally handle email errors, e.g. revert changes, return error
-   }
-
-   // STEP 5: Return a response telling the user to verify the code
-   res.json({
-     message: '2FA code sent to your email. Please verify to complete login.',
-     userId: user._id,  // We'll need the userId to know which account we’re verifying
-   });
   } catch (err) {
     res.status(500).json({ message: 'Error logging in', error: err.message });
   }
 });
 
 
- app.post('/verify-2fa', async (req, res) => {
-     try {
-       const { userId, code } = req.body;
-       if (!userId || !code) {
-         return res.status(400).json({ message: 'userId and code are required.' });
-       }
-  
-       // 1) Find the user
-       const user = await User.findById(userId);
-       if (!user) {
-         return res.status(404).json({ message: 'User not found.' });
-       }
-  
-       // 2) Check if code matches and not expired
-       const now = new Date();
-       if (
-        user.twoFactorCode !== code ||
-         !user.twoFactorCodeExpires ||
-         user.twoFactorCodeExpires < now
-       ) {
-         return res.status(400).json({ message: 'Invalid or expired code.' });
-       }  
-       // 3) If valid, create the JWT
-       const token = jwt.sign(
-         { id: user._id },
-         process.env.JWT_SECRET || 'secretkey',
-         { expiresIn: '1h' }
-       );
-  
-       // 4) Clear the code from the DB (so user can’t re-use it)
-       user.twoFactorCode = null;
-       user.twoFactorCodeExpires = null;
-       await user.save();
-  
-       // 5) Return the token + user data
-       res.json({
-         message: '2FA verification successful.',
-         token,
-         user: {
-           id: user._id,
-           firstName: user.firstName,
-           lastName: user.lastName,
-           email: user.email,
-         },
-       });
-     } catch (err) {
-       res.status(500).json({ message: 'Error verifying 2FA', error: err.message });
-     }
-   });
+ 
   
 
 
@@ -742,12 +733,6 @@ app.get('/portfolio/:id', async (req, res) => {
   }
 });
 
-// -------------------- 2FA --------------------
-
-function generate2FACode() {
-    // Returns a 6-digit string, e.g. "123456"
-    return Math.floor(100000 + Math.random() * 900000).toString();
-   }
 
 
 // -------------------- START SERVER --------------------

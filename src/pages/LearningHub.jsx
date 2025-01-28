@@ -1,6 +1,8 @@
 import React from "react";
 import VideoSection from "../components/VideoSection";
 import QuizSection from "../components/QuizSection";
+import InfoSection from "../components/InfoSection";
+import ChartQuizSection from "../components/ChartQuizSection";
 
 export default function LearningHub() {
   return (
@@ -10,22 +12,24 @@ export default function LearningHub() {
           Welcome to the Learning Hub
         </h1>
         <p className="text-gray-600 mt-2">
-          Explore cryptocurrencies and blockchain through videos, quizzes, and coding exercises.
+          Explore cryptocurrencies and blockchain through videos, quizzes, and educational articles.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Video Section */}
-        <VideoSection />
+      {/* İki Sütunlu Grid Düzeni */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+        {/* Sol Tarafta VideoSection */}
+        <div className="flex flex-col justify-between min-h-full">
+          <VideoSection />
+        </div>
 
-        {/* Quiz Section */}
-        <QuizSection />
-
-    
-
+        {/* Sağ Tarafta (Quiz, Info ve Chart Alt Alta) */}
+        <div className="flex flex-col gap-6 flex-1">
+          <QuizSection />
+          <InfoSection />
+          <ChartQuizSection />
+        </div>
       </div>
-
-
     </div>
   );
 }

@@ -51,21 +51,19 @@ const TopLosers = () => {
           </tr>
         </thead>
         <tbody>
-          {losersData.map((coin, index) => (
-            <tr key={index} className="border-t">
-              <td className="px-4 py-2">{coin.symbol}</td>
-              <td className="px-4 py-2">
-                ${coin.price ? coin.price.toLocaleString() : "N/A"}
-              </td>
-              <td
-                className={`px-4 py-2 ${
-                  coin.change > 0 ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {coin.change ? coin.change.toFixed(2) : 0}%
-              </td>
-            </tr>
-          ))}
+          {losersData
+            .filter((coin) => coin.change < 0) // Exclude coins with non-negative changes
+            .map((coin, index) => (
+              <tr key={index} className="border-t">
+                <td className="px-4 py-2">{coin.symbol}</td>
+                <td className="px-4 py-2">
+                  ${coin.price ? coin.price.toLocaleString() : "N/A"}
+                </td>
+                <td className="px-4 py-2 text-red-500">
+                  {coin.change ? coin.change.toFixed(2) : 0}%
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

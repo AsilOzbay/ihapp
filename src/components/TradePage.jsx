@@ -24,7 +24,13 @@ const TradePage = ({ crypto, onBack }) => {
   const [quantity, setQuantity] = useState(0);
   const [price, setPrice] = useState(crypto?.price || 0);
   const [action, setAction] = useState("");
+  const [timeframe, setTimeframe] = useState("1M");
+   // Default to 1-day interval
   const [message, setMessage] = useState("");
+  const [transactionDate, setTransactionDate] = useState(
+    new Date().toISOString().slice(0, 16) // Default to current date and time
+  );
+  
   
   // State for portfolio management
   const [portfolios, setPortfolios] = useState([]); // List of portfolios
@@ -61,17 +67,17 @@ console.log("TradePage received crypto:", crypto);
     const fetchGraphData = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/graph-data/${crypto.symbol}`
+          `http://localhost:5000/graph-data/${crypto.symbol}?timeframe=${timeframe}`
         );
         const data = await response.json();
-
+  
         const prices = data.map((point) => point.price);
         const times = data.map((point) => point.time);
-
+  
         const minPrice = Math.min(...prices) * 0.9; // 10% below the lowest price
         const maxPrice = Math.max(...prices) * 1.1; // 10% above the highest price
         setYAxisRange({ min: minPrice, max: maxPrice });
-
+  
         setChartData({
           labels: times,
           datasets: [
@@ -88,9 +94,9 @@ console.log("TradePage received crypto:", crypto);
         console.error("Error fetching graph data:", error);
       }
     };
-
+  
     fetchGraphData();
-  }, [crypto.symbol]); // Depend only on crypto.symbol
+  }, [crypto.symbol, timeframe]); // <== Add `timeframe` here
 
   // Handle Trade
   const handleTrade = async () => {
@@ -118,10 +124,11 @@ console.log("TradePage received crypto:", crypto);
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             symbol: crypto.symbol,
-            action,
-            quantity,
-            price,
-            total,
+            action, // Buy or sell
+            quantity, // Number of units
+            price, // Price per unit
+            total, // Calculated total = quantity * price
+            transactionDate, // Date and time of the transaction
           }),
         }
       );
@@ -130,7 +137,7 @@ console.log("TradePage received crypto:", crypto);
         setMessage(
           `Successfully ${action === "buy" ? "bought" : "sold"} ${quantity} ${
             crypto.symbol
-          } at $${price} each.`
+          } at $${price} each on ${transactionDate}.`
         );
       } else {
         setMessage("Failed to execute the transaction.");
@@ -159,7 +166,13 @@ console.log("TradePage received crypto:", crypto);
           <h1 className="text-2xl font-bold mb-4">{crypto.symbol}</h1>
           <p className="text-xl font-semibold mb-4 text-green-500">
             ${crypto.price.toLocaleString()}{" "}
-            <span>({crypto.change.toFixed(2)}%)</span>
+            <span
+  className={`${
+    crypto.change > 0 ? "text-green-500" : "text-red-500"
+  }`}
+>
+  ({crypto.change.toFixed(2)}%)
+</span>
           </p>
           <div className="grid grid-cols-2 gap-4 text-sm mb-4">
             <div>
@@ -230,16 +243,24 @@ console.log("TradePage received crypto:", crypto);
               </div>
             </div>
             <div>
-              <label className="block text-sm font-bold mb-2">Price</label>
-              <input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full border rounded px-3 py-2"
-                step="0.01"
-                min="0"
-              />
-            </div>
+  <label className="block text-sm font-bold mb-2">Price</label>
+  <div className="flex items-center space-x-2">
+    <input
+      type="number"
+      value={price}
+      onChange={(e) => setPrice(Number(e.target.value))}
+      className="w-full border rounded px-3 py-2"
+      step="0.01"
+      min="0"
+    />
+    <button
+      onClick={() => setPrice(crypto.price)}
+      className="bg-gray-200 text-sm px-3 py-2 rounded"
+    >
+      Use Real-Time Price
+    </button>
+  </div>
+</div>
             <div>
               <label className="block text-sm font-bold mb-2">Quantity</label>
               <input
@@ -252,6 +273,15 @@ console.log("TradePage received crypto:", crypto);
               />
             </div>
             <div>
+  <label className="block text-sm font-bold mb-2">Transaction Date & Time</label>
+  <input
+    type="datetime-local"
+    value={transactionDate}
+    onChange={(e) => setTransactionDate(e.target.value)}
+    className="w-full border rounded px-3 py-2"
+  />
+</div>
+            <div>
               <label className="block text-sm font-bold mb-2">Total</label>
               <p className="text-lg font-bold">
                 ${(quantity * price).toFixed(2)}
@@ -262,13 +292,32 @@ console.log("TradePage received crypto:", crypto);
             onClick={handleTrade}
             className="bg-blue-500 text-white px-4 py-2 rounded w-full"
           >
-            Confirm {action === "buy" ? "Purchase" : "Sale"}
+           <p>Add To Portfolio As {action === "buy" ? "Purchase" : action === "sell" ? "Sale" : "Action"}</p>
+
           </button>
           {message && (
             <p className="mt-4 text-center text-gray-700">{message}</p>
           )}
         </div>
       </div>
+      <div className="flex space-x-4 mb-4">
+  {[
+    { label: "15 Minutes", value: "15m" },
+    { label: "Hourly", value: "1h" },
+    { label: "Daily", value: "1d" },
+    { label: "Monthly", value: "1M" },
+  ].map(({ label, value }) => (
+    <button
+      key={value}
+      onClick={() => setTimeframe(value)}
+      className={`px-4 py-2 rounded ${
+        timeframe === value ? "bg-blue-500 text-white" : "bg-gray-200"
+      }`}
+    >
+      {label}
+    </button>
+  ))}
+</div>
 
       {/* Chart Section */}
       <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
@@ -276,18 +325,67 @@ console.log("TradePage received crypto:", crypto);
         {chartData ? (
           <div style={{ height: "400px" }}>
             <Line
-              data={chartData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    min: yAxisRange?.min,
-                    max: yAxisRange?.max,
-                  },
-                },
-              }}
-            />
+  data={chartData}
+  options={{
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: "index", // Shows tooltip for the x-axis position, even between points
+      intersect: false, // Allows hovering anywhere on the line, not just on points
+      axis: "x", // Forces tracking along the x-axis continuously
+    },
+    plugins: {
+      tooltip: {
+        position: "nearest", // Positions tooltip nearest to mouse cursor
+        callbacks: {
+          title: function (tooltipItems) {
+            if (!tooltipItems.length) return "";
+            const index = tooltipItems[0].dataIndex;
+            const dateLabel = chartData.labels[index];
+
+            const formattedDate = new Date(dateLabel).toLocaleString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: true,
+            });
+
+            return `Date: ${formattedDate}`;
+          },
+          label: function (tooltipItem) {
+            const price = tooltipItem.raw?.toFixed(2) || "N/A";
+            return `Price: $${price}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          callback: function (value, index) {
+            const dateLabel = chartData.labels[index];
+            if (!dateLabel) return "N/A";
+
+            const formattedTime = new Date(dateLabel).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            return formattedTime;
+          },
+        },
+      },
+      y: {
+        min: yAxisRange?.min,
+        max: yAxisRange?.max,
+      },
+    },
+  }}
+/>
+
           </div>
         ) : (
           <p>Loading chart...</p>

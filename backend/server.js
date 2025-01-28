@@ -203,7 +203,8 @@ const fetchCryptoData = async () => {
         axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
       );
       const responses = await Promise.all(requests);
-  
+      console.log(responses.at(1).data.lowPrice)
+      console.log(responses.at(1).data.highPrice)
       cachedCryptoData = responses.map((response) => ({
         symbol: response.data.symbol.replace('USDT', ''),
         price: parseFloat(response.data.lastPrice),
@@ -211,11 +212,13 @@ const fetchCryptoData = async () => {
         volume: parseFloat(response.data.volume),
         highPrice: parseFloat(response.data.highPrice),
         lowPrice: parseFloat(response.data.lowPrice),
+        
   
         // 2) We'll initialize weeklyChange & monthlyChange to 0 for now
         weeklyChange: 0,
         monthlyChange: 0,
       }));
+      console.log(cachedCryptoData);
   
       console.log('Crypto data fetched successfully for 30 symbols.');
   
@@ -374,6 +377,8 @@ app.get('/crypto-data', (req, res) => {
       weeklyChange: coin.weeklyChange,
       monthlyChange: coin.monthlyChange,
       volume: coin.volume,
+      highPrice: coin.highPrice, // Ensure these values are sent
+      lowPrice: coin.lowPrice,   // Ensure these values are sent
     })),
     lastUpdated: lastFetchTime,
   });
@@ -470,35 +475,32 @@ async function fetchMonthlyChange(symbol) {
 
 
 // Helper to fetch historical data from Binance
-const fetchHistoricalData = async (symbol, interval = '1m', limit = 20) => {
-  try {
-    const response = await axios.get(
-      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
-    );
-    return response.data.map((entry) => ({
-      time: new Date(entry[0]).toLocaleTimeString(), // Timestamp
-      price: parseFloat(entry[4]), // Closing price
-    }));
-  } catch (error) {
-    console.error('Error fetching historical data:', error.message);
-    return [];
-  }
+const fetchHistoricalData = async (symbol, interval = "1m", limit = 20) => {
+  const response = await axios.get(
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+  );
+  return response.data.map((entry) => ({
+    time: new Date(entry[0]).toISOString(), // Proper ISO format
+    price: parseFloat(entry[4]),
+  }));
 };
 let historicalDataCache = {};
 // Endpoint to get graph data
 app.get('/graph-data/:symbol', async (req, res) => {
   const { symbol } = req.params;
-  // Convert to Binance symbol
+  const { timeframe } = req.query; 
+  const interval = timeframe || "1d"; 
   const binanceSymbol = `${symbol.toUpperCase()}USDT`;
 
-  // Check cache
-  if (historicalDataCache[binanceSymbol]) {
-    return res.json(historicalDataCache[binanceSymbol]);
+  if (historicalDataCache[binanceSymbol]?.[interval]) {
+    return res.json(historicalDataCache[binanceSymbol][interval]);
   }
 
-  // Fetch and store in cache
-  const historicalData = await fetchHistoricalData(binanceSymbol);
-  historicalDataCache[binanceSymbol] = historicalData;
+  const historicalData = await fetchHistoricalData(binanceSymbol, interval);
+  if (!historicalDataCache[binanceSymbol]) {
+    historicalDataCache[binanceSymbol] = {};
+  }
+  historicalDataCache[binanceSymbol][interval] = historicalData;
   res.json(historicalData);
 });
 
@@ -543,47 +545,47 @@ setInterval(async () => {
 
   app.post('/portfolio/:id/transaction', async (req, res) => {
     const { id } = req.params; // Portfolio ID
-    const { symbol, action, quantity, price } = req.body;
+    const { symbol, action, quantity, price, transactionDate } = req.body; // Include transactionDate
   
-    // Validate input
-    if (!symbol || !action || !quantity || !price) {
-      return res.status(400).json({ message: 'All fields are required: symbol, action, quantity, price' });
+    if (!symbol || !action || !quantity || !price || !transactionDate) {
+      return res.status(400).json({
+        message: 'All fields are required: symbol, action, quantity, price, transactionDate',
+      });
     }
   
     try {
-      const total = quantity * price; // Calculate the total value of the transaction
+      const total = quantity * price; // Calculate total
       if (quantity <= 0 || price <= 0) {
         return res.status(400).json({ message: 'Quantity and price must be positive numbers' });
       }
-      
+  
       if (!['buy', 'sell'].includes(action)) {
         return res.status(400).json({ message: 'Action must be either "buy" or "sell"' });
       }
-      // Find the portfolio by ID and update it
-      const portfolio = await Portfolio.findById(id);
   
+      const portfolio = await Portfolio.findById(id);
       if (!portfolio) {
         return res.status(404).json({ message: 'Portfolio not found' });
       }
   
-      // Add the transaction to the portfolio
-      portfolio.transactions.push({
+      const newTransaction = {
         symbol,
         action,
         quantity,
         price,
         total,
-      });
+        date: new Date(transactionDate), // Use provided transactionDate
+      };
   
-
-      // Save the updated portfolio
-      await portfolio.save();
+      portfolio.transactions.push(newTransaction);
+      await portfolio.save(); // This needs to be inside an async function
   
       res.status(201).json({ message: 'Transaction added successfully', portfolio });
     } catch (error) {
       res.status(500).json({ message: 'Error adding transaction', error: error.message });
     }
   });
+  
 
 
   app.put('/portfolio/:portfolioId/transaction/:transactionId', async (req, res) => {

@@ -293,7 +293,7 @@ const CryptoPricesTable = () => {
     }}
     className="bg-blue-500 text-white px-3 py-1 rounded"
   >
-    Trade
+    Details
   </button>
 </td>
         </tr>

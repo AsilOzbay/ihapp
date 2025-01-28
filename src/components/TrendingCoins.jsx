@@ -1,6 +1,3 @@
-// ---------------------------------------------
-// PART 3: TopGainers.jsx (formerly TrendingCoins.jsx)
-// ---------------------------------------------
 import React, { useState, useEffect } from "react";
 
 const TopGainers = () => {
@@ -64,31 +61,19 @@ const TopGainers = () => {
           </tr>
         </thead>
         <tbody>
-          {gainersData.map((coin, index) => (
-            <tr key={index} className="border-t">
-              <td className="px-4 py-2">{coin.symbol}</td>
-              <td className="px-4 py-2">
-                ${coin.price ? coin.price.toLocaleString() : "N/A"}
-              </td>
-              <td
-                className={`px-4 py-2 ${
-                  coin.change > 0 ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {
-                  // If daily, coin.change
-                  // If weekly, coin.weeklyChange
-                  // If monthly, coin.monthlyChange
-                  // Because of how we wrote the server, we do NOT need 
-                  // separate fields if we rely on the server to only 
-                  // return the relevant timeframe's data in the "change" field.
-                  // But if your server returns separate fields, you'd handle that differently.
-                  // For simplicity, let's assume the server returns "change" for the chosen timeframe:
-                }
-                {coin.change ? coin.change.toFixed(2) : 0}%
-              </td>
-            </tr>
-          ))}
+          {gainersData
+            .filter((coin) => coin.change > 0) // Exclude coins with non-positive changes
+            .map((coin, index) => (
+              <tr key={index} className="border-t">
+                <td className="px-4 py-2">{coin.symbol}</td>
+                <td className="px-4 py-2">
+                  ${coin.price ? coin.price.toLocaleString() : "N/A"}
+                </td>
+                <td className="px-4 py-2 text-green-500">
+                  {coin.change ? coin.change.toFixed(2) : 0}%
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

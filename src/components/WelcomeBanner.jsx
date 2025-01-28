@@ -16,7 +16,7 @@ const WelcomeBanner = () => {
       {user ? (
         <h1 className="text-xl font-bold">Welcome {user.firstName}!</h1>
       ) : (
-        <h1 className="text-xl font-bold">Welcome!</h1>
+        <h1 className="text-xl font-bold">Welcome Guest!</h1>
       )}
     </div>
   );

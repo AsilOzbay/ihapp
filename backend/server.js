@@ -11,7 +11,7 @@ const axios = require('axios');
 const User = require('./models/User');
 const Portfolio = require('./models/Portfolio');
 const nodemailer = require('nodemailer');
-
+require("dotenv").config();
 
 
 
@@ -924,6 +924,171 @@ const fetchCryptoPanicNews = async (language = "en", forceRefresh = false) => {
   }
 };
 
+
+// -------------------- COIN GECKPO--------------------
+
+const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
+
+// Fetch global market data
+const fetchGlobalMarketData = async () => {
+  try {
+    const response = await axios.get(`${COINGECKO_BASE_URL}/global`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching global market data:", error.message);
+    return null;
+  }
+};
+
+// Fetch trending coins
+const fetchTrendingCoinss = async () => {
+  try {
+    const response = await axios.get(`${COINGECKO_BASE_URL}/search/trending`);
+    return response.data.coins.map((coin) => ({
+      name: coin.item.name,
+      symbol: coin.item.symbol,
+      market_cap_rank: coin.item.market_cap_rank,
+    }));
+  } catch (error) {
+    console.error("Error fetching trending coins:", error.message);
+    return [];
+  }
+};
+
+// Fetch top cryptocurrencies by market cap
+const fetchTopCoins = async () => {
+  try {
+    const response = await axios.get(`${COINGECKO_BASE_URL}/coins/markets`, {
+      params: {
+        vs_currency: "usd",
+        order: "market_cap_desc",
+        per_page: 3, // Fetch only the top 3 coins
+        page: 1,
+      },
+    });
+    return response.data.map((coin) => ({
+      name: coin.name,
+      symbol: coin.symbol,
+      price: coin.current_price,
+      market_cap: coin.market_cap,
+      volume: coin.total_volume,
+      change_24h: coin.price_change_percentage_24h,
+    }));
+  } catch (error) {
+    console.error("Error fetching top coins:", error.message);
+    return [];
+  }
+};
+
+const GEMINI_API_KEY = "AIzaSyBGPf3bbR4GjlBvCvsovewnA-0bnJh8LRo";
+
+const generateNewsFromGemini = async (globalData, topCoins, language = "en") => {
+  try {
+    if (!globalData || !topCoins) {
+      throw new Error("Missing required data: globalData or topCoins");
+    }
+
+    const prompts = {
+      en: ` give the longest answer you can. keep it long. give it like header and explanation for each topic, make it more readable.
+        Today's cryptocurrency market update:
+        - Total Market Cap: $${(globalData.total_market_cap?.usd / 1e12 || 0).toFixed(2)} Trillion
+        - 24h Trading Volume: $${(globalData.total_volume?.usd / 1e9 || 0).toFixed(2)} Billion
+        - Bitcoin Dominance: ${(globalData.market_cap_percentage?.btc || 0).toFixed(2)}%
+        - Ethereum Dominance: ${(globalData.market_cap_percentage?.eth || 0).toFixed(2)}%
+
+        Key Price Movements (Top 3 Coins by Market Cap):
+        ${
+          topCoins.slice(0, 3).length > 0
+            ? topCoins
+                .slice(0, 3)
+                .map((coin) => `- ${coin.name || "Unknown"}: $${coin.price?.toLocaleString() || "N/A"} (${coin.change_24h?.toFixed(2) || 0}% change)`)
+                .join("\n")
+            : "No top coins available."
+        }
+
+        Summarize this information into a brief market update.
+      `,
+      tr: `
+        Bugünün kripto para piyasası güncellemesi:
+        - Toplam Piyasa Değeri: $${(globalData.total_market_cap?.usd / 1e12 || 0).toFixed(2)} Trilyon
+        - 24 Saatlik Ticaret Hacmi: $${(globalData.total_volume?.usd / 1e9 || 0).toFixed(2)} Milyar
+        - Bitcoin Hakimiyeti: ${(globalData.market_cap_percentage?.btc || 0).toFixed(2)}%
+        - Ethereum Hakimiyeti: ${(globalData.market_cap_percentage?.eth || 0).toFixed(2)}%
+
+        Piyasa Değeri En Yüksek 3 Coin'in Ana Fiyat Hareketleri:
+        ${
+          topCoins.slice(0, 3).length > 0
+            ? topCoins
+                .slice(0, 3)
+                .map((coin) => `- ${coin.name || "Unknown"}: $${coin.price?.toLocaleString() || "N/A"} (${coin.change_24h?.toFixed(2) || 0}% değişim)`)
+                .join("\n")
+            : "En iyi coin bilgisi mevcut değil."
+        }
+
+        Bu bilgileri özetleyerek kısa bir piyasa güncellemesi sağlayın.
+      `,
+    };
+
+    const requestBody = {
+      contents: [{ parts: [{ text: prompts[language] }] }],
+    };
+
+    const response = await axios.post(GEMINI_API_URL, requestBody
+    );
+
+    const summary = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No news available.";
+    return summary;
+  } catch (error) {
+    console.error("Error generating news with Gemini:", error.message);
+    return language === "tr"
+      ? "Şu anda piyasa özeti getirilemiyor."
+      : "Unable to generate market summary at the moment.";
+  }
+};
+
+// New endpoint to test in Postman
+let cachedNewsgemini = null; // Cache for Gemini news
+let cacheTimestamp = null; // Timestamp for the cached news
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+app.get("/geminicrypto-news", async (req, res) => {
+  try {
+    const language = req.query.lang || "en";
+
+    // Check if cached news is still valid
+    if (cachedNewsgemini && cacheTimestamp && Date.now() - cacheTimestamp < CACHE_DURATION) {
+      return res.json({ news: cachedNewsgemini, lastUpdated: cacheTimestamp });
+    }
+
+    // Fetch required data
+    const globalData = await fetchGlobalMarketData();
+    const topCoins = await fetchTopCoins();
+
+    // Validate the fetched data
+    if (!globalData) {
+      return res.status(500).json({ message: "Global data is missing." });
+    }
+
+    if (!Array.isArray(topCoins) || topCoins.length === 0) {
+      return res.status(500).json({ message: "Top coins are missing or empty." });
+    }
+
+    // Generate the market update
+    const news = await generateNewsFromGemini(globalData, topCoins, language);
+
+    // Cache the generated news and timestamp
+    cachedNewsgemini = news;
+    cacheTimestamp = Date.now();
+
+    res.json({ news, lastUpdated: cacheTimestamp });
+  } catch (error) {
+    console.error("Error in /geminicrypto-news endpoint:", error.message);
+    res.status(500).json({ message: "Unable to generate crypto news at the moment." });
+  }
+});
+
+module.exports = generateNewsFromGemini;
 // -------------------- START SERVER --------------------
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

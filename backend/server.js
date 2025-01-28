@@ -203,8 +203,7 @@ const fetchCryptoData = async () => {
         axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
       );
       const responses = await Promise.all(requests);
-      console.log(responses.at(1).data.lowPrice)
-      console.log(responses.at(1).data.highPrice)
+
       cachedCryptoData = responses.map((response) => ({
         symbol: response.data.symbol.replace('USDT', ''),
         price: parseFloat(response.data.lastPrice),
@@ -218,7 +217,6 @@ const fetchCryptoData = async () => {
         weeklyChange: 0,
         monthlyChange: 0,
       }));
-      console.log(cachedCryptoData);
   
       console.log('Crypto data fetched successfully for 30 symbols.');
   
@@ -338,7 +336,6 @@ const fetchTrendingCoins = async () => {
     const sortedByGainers = [...cachedCryptoData].sort((a, b) => b.change - a.change);
     cachedTrendingData = sortedByGainers.slice(0, 5);
 
-    console.log('Top 5 daily gainers set in cachedTrendingData');
   } catch (error) {
     console.error('Error fetching trending coins:', error.message);
   }
@@ -367,22 +364,70 @@ const fetchAllData = async () => {
 fetchAllData();
 
 // -------------------- CRYPTO ENDPOINTS --------------------
-app.get('/crypto-data', (req, res) => {
-  // Return cached data with all change rates included
-  res.json({
-    data: cachedCryptoData.map((coin) => ({
-      symbol: coin.symbol,
-      price: coin.price,
-      dailyChange: coin.dailyChange,
-      weeklyChange: coin.weeklyChange,
-      monthlyChange: coin.monthlyChange,
-      volume: coin.volume,
-      highPrice: coin.highPrice, // Ensure these values are sent
-      lowPrice: coin.lowPrice,   // Ensure these values are sent
-    })),
-    lastUpdated: lastFetchTime,
-  });
+app.get('/crypto-data', async (req, res) => {
+  if (!cachedCryptoData || cachedCryptoData.length === 0) {
+    console.log('Fetching data as cache is empty...');
+    await fetchCryptoData();
+  }
+  try {
+    const data = await Promise.all(
+      cachedCryptoData.map(async (coin) => {
+        const binanceSymbol = `${coin.symbol}USDT`;
+
+        // Fetch historical data for different timeframes
+        const last1Hour = await fetchHistoricalData(binanceSymbol, "1m", 60); // 60 one-minute candles
+        const last24Hours = await fetchHistoricalData(binanceSymbol, "1h", 24); // 24 one-hour candles
+        const last7Days = await fetchHistoricalData(binanceSymbol, "1d", 7);    // 7 daily candles
+        const last30Days = await fetchHistoricalData(binanceSymbol, "1d", 30);  // 30 daily candles
+
+        // Helper function to calculate high/low and change
+        const calculateHighLow = (data) => {
+          if (!data || data.length === 0) {
+            console.error('No data available for high/low calculation');
+            return { high: 0, low: 0, change: 0 };
+          }
+          const prices = data.map((d) => d.price);
+          const high = Math.max(...prices);
+          const low = Math.min(...prices);
+          const initialPrice = prices[0]; // Price at the beginning of the timeframe
+          const currentPrice = prices[prices.length - 1]; // Most recent price
+          const change = ((currentPrice - initialPrice) / initialPrice) * 100;
+          return { high, low, change };
+        };
+
+        // Calculate high/low and change for each timeframe
+        
+        const hourlyHighLow = calculateHighLow(last1Hour); // Last 24 hours
+        const dailyHighLow = calculateHighLow(last24Hours);
+        const weeklyHighLow = calculateHighLow(last7Days);
+        const monthlyHighLow = calculateHighLow(last30Days);
+
+        return {
+          ...coin,
+          hourlyHigh: hourlyHighLow.high,
+          hourlyLow: hourlyHighLow.low,
+          hourlyChange: hourlyHighLow.change,
+          dailyHigh: dailyHighLow.high,
+          dailyLow: dailyHighLow.low,
+          dailyChange: dailyHighLow.change,
+          weeklyHigh: weeklyHighLow.high,
+          weeklyLow: weeklyHighLow.low,
+          weeklyChange: weeklyHighLow.change,
+          monthlyHigh: monthlyHighLow.high,
+          monthlyLow: monthlyHighLow.low,
+          monthlyChange: monthlyHighLow.change,
+        };
+      })
+    );
+
+    res.json({ data, lastUpdated: lastFetchTime });
+  } catch (error) {
+    console.error('Error fetching crypto data:', error.message);
+    res.status(500).json({ message: 'Failed to fetch data' });
+  }
 });
+
+
 
 
 app.get('/top-exchanges', (req, res) => {
@@ -408,7 +453,6 @@ const fetchTopLosers = async () => {
 
     // Take the first 5 (these will be the biggest losers):
     cachedTopLosersData = sorted.slice(0, 5);
-    console.log('Top 5 daily losers set in cachedTopLosersData');
   } catch (error) {
     console.error('Error in fetchTopLosers:', error.message);
   }

@@ -78,7 +78,7 @@ app.post('/register', async (req, res) => {
       from: process.env.EMAIL_USER, // Sender address
       to: email, // Recipient address
       subject: 'Verify Your Email',
-      text: `Hello ${firstName},\n\nYour verification code is: ${verificationCode}\n\nPlease enter the code to the verification page!`,
+      text: `Hello ${firstName},\n\nYour verification code is: ${verificationCode}\n\nThank you!`,
     };
 
     // Send Email
@@ -779,6 +779,41 @@ app.get('/portfolio/:id', async (req, res) => {
   }
 });
 
+
+
+app.delete('/portfolio/:portfolioId/transaction/:transactionId', async (req, res) => {
+  const { portfolioId, transactionId } = req.params;
+
+  // Check if IDs are valid MongoDB Object IDs
+  if (!mongoose.Types.ObjectId.isValid(portfolioId) || !mongoose.Types.ObjectId.isValid(transactionId)) {
+    return res.status(400).json({ message: 'Invalid Portfolio ID or Transaction ID.' });
+  }
+  console.log("deleting");
+  try {
+    const portfolio = await Portfolio.findById(portfolioId);
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found.' });
+    }
+
+    const transaction = portfolio.transactions.id(transactionId);
+    if (!transaction) {
+      console.log('Transaction not found:', transactionId);
+      return res.status(404).json({ message: 'Transaction not found.' });
+    }
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found.' });
+    }
+
+    transaction.remove(); // Remove the transaction
+    await portfolio.save(); // Save the updated portfolio
+
+    res.status(200).json({ transactions: portfolio.transactions });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting transaction', error: error.message });
+  }
+});
+
+
 // -------------------- NEWS --------------------
 
 // -------------------- CACHE FOR CRYPTO NEWS --------------------
@@ -989,7 +1024,7 @@ const generateNewsFromGemini = async (globalData, topCoins, language = "en") => 
     }
 
     const prompts = {
-      en: ` give the longest answer you can. keep it long. give it like header and explanation for each topic, make it more readable.
+      en: ` give the longest answer you can. keep it long. give it like header and explanation for each topic, make it more readable. use \n for new line.
         Today's cryptocurrency market update:
         - Total Market Cap: $${(globalData.total_market_cap?.usd / 1e12 || 0).toFixed(2)} Trillion
         - 24h Trading Volume: $${(globalData.total_volume?.usd / 1e9 || 0).toFixed(2)} Billion

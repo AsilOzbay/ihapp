@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const TransactionSchema = new mongoose.Schema({
+const transactionSchema = new mongoose.Schema({
   symbol: { type: String, required: true },
   action: { type: String, enum: ['buy', 'sell'], required: true },
   quantity: { type: Number, required: true },
@@ -9,13 +9,11 @@ const TransactionSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
 });
 
-const PortfolioSchema = new mongoose.Schema({
+const portfolioSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   name: { type: String, required: true },
-  avatar: { type: String, default: '' },
-  transactions: [TransactionSchema],
-  createdAt: { type: Date, default: Date.now },
+  avatar: { type: String },
+  transactions: [transactionSchema], // Array of subdocuments
 });
 
-const Portfolio = mongoose.model('Portfolio', PortfolioSchema);
-module.exports = Portfolio;
+module.exports = mongoose.model('Portfolio', portfolioSchema);

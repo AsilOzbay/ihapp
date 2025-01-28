@@ -97,10 +97,6 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
     }
   };
 
-  const editTransaction = (transaction) => {
-    setEditingTransaction(transaction);
-  };
-
   const handleEditSubmit = async (editedTransaction) => {
     try {
       const response = await fetch(
@@ -181,24 +177,62 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
           <h3 className="text-xl font-bold mb-4">Transactions</h3>
           {transactions.map((transaction) => (
             <div key={transaction._id} className="border-b py-2 flex justify-between items-center">
-              <p>
-                {transaction.action.toUpperCase()} {transaction.quantity} {transaction.symbol} @ $
-                {transaction.price.toFixed(2)}
-              </p>
-              <div className="space-x-2">
-                <button
-                  onClick={() => editTransaction(transaction)}
-                  className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteTransaction(transaction._id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </div>
+              {isEditingTransaction?._id === transaction._id ? (
+                <div className="flex-grow space-x-2">
+                  <input
+                    type="text"
+                    value={isEditingTransaction.symbol}
+                    onChange={(e) =>
+                      setEditingTransaction({ ...isEditingTransaction, symbol: e.target.value })
+                    }
+                    className="border rounded px-2 py-1 mr-2"
+                  />
+                  <input
+                    type="number"
+                    value={isEditingTransaction.quantity}
+                    onChange={(e) =>
+                      setEditingTransaction({ ...isEditingTransaction, quantity: +e.target.value })
+                    }
+                    className="border rounded px-2 py-1 mr-2"
+                  />
+                  <input
+                    type="number"
+                    value={isEditingTransaction.price}
+                    onChange={(e) =>
+                      setEditingTransaction({ ...isEditingTransaction, price: +e.target.value })
+                    }
+                    className="border rounded px-2 py-1 mr-2"
+                  />
+                  <button
+                    onClick={() => handleEditSubmit(isEditingTransaction)}
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  >
+                    Save
+                  </button>
+                </div>
+              ) : (
+                <p>
+                  {transaction.action.toUpperCase()} {transaction.quantity} {transaction.symbol} @ $
+                  {transaction.price.toFixed(2)}
+                </p>
+              )}
+
+              {!isEditingTransaction && (
+                <div className="space-x-2">
+                  <button
+                    onClick={() => setEditingTransaction(transaction)}
+                    className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteTransaction(transaction._id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

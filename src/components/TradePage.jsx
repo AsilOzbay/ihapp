@@ -177,40 +177,64 @@ console.log("TradePage received crypto:", crypto);
   ({crypto.change.toFixed(2)}%)
 </span>
           </p>
-          <div className="grid grid-cols-3 gap-4 text-sm mb-6">
-  {/* Hourly */}
-  <div className="bg-white shadow-md rounded-lg p-4">
-    <h3 className="text-lg font-semibold mb-2">1 Hour</h3>
-    <p><strong>High:</strong> ${crypto.hourlyHigh?.toLocaleString() || 'Loading...'}</p>
-    <p><strong>Low:</strong> ${crypto.hourlyLow?.toLocaleString() || 'Loading...'}</p>
-    <p><strong>Change:</strong> {crypto.hourlyChange?.toFixed(2)}%</p>
+          <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+  <div>
+    <p><strong>High (1 Hour):</strong></p>
+    <p>${crypto.hourlyHigh?.toLocaleString() || 'Loading...'}</p>
+  </div>
+  <div>
+    <p><strong>Low (1 Hour):</strong></p>
+    <p>${crypto.hourlyLow?.toLocaleString() || 'Loading...'}</p>
+  </div>
+  <div>
+    <p><strong>Change (1 Hour):</strong></p>
+    <p>{crypto.hourlyChange?.toFixed(2)}%</p>
   </div>
 
-  {/* Daily */}
-  <div className="bg-white shadow-md rounded-lg p-4">
-    <h3 className="text-lg font-semibold mb-2">1 Day</h3>
-    <p><strong>High:</strong> ${crypto.dailyHigh?.toLocaleString() || 'Loading...'}</p>
-    <p><strong>Low:</strong> ${crypto.dailyLow?.toLocaleString() || 'Loading...'}</p>
-    <p><strong>Change:</strong> {crypto.dailyChange?.toFixed(2)}%</p>
+  <div>
+    <p><strong>High (1 Day):</strong></p>
+    <p>${crypto.dailyHigh?.toLocaleString() || 'Loading...'}</p>
+  </div>
+  <div>
+    <p><strong>Low (1 Day):</strong></p>
+    <p>${crypto.dailyLow?.toLocaleString() || 'Loading...'}</p>
+  </div>
+  <div>
+    <p><strong>Change (1 Day):</strong></p>
+    <p>{crypto.dailyChange?.toFixed(2)}%</p>
   </div>
 
-  {/* Weekly */}
-  <div className="bg-white shadow-md rounded-lg p-4">
-    <h3 className="text-lg font-semibold mb-2">1 Week</h3>
-    <p><strong>High:</strong> ${crypto.weeklyHigh?.toLocaleString() || 'Loading...'}</p>
-    <p><strong>Low:</strong> ${crypto.weeklyLow?.toLocaleString() || 'Loading...'}</p>
-    <p><strong>Change:</strong> {crypto.weeklyChange?.toFixed(2)}%</p>
+  <div>
+    <p><strong>High (1 Week):</strong></p>
+    <p>${crypto.weeklyHigh?.toLocaleString() || 'Loading...'}</p>
+  </div>
+  <div>
+    <p><strong>Low (1 Week):</strong></p>
+    <p>${crypto.weeklyLow?.toLocaleString() || 'Loading...'}</p>
+  </div>
+  <div>
+    <p><strong>Change (1 Week):</strong></p>
+    <p>{crypto.weeklyChange?.toFixed(2)}%</p>
   </div>
 
-  {/* Monthly */}
-  <div className="bg-white shadow-md rounded-lg p-4 col-span-3">
-    <h3 className="text-lg font-semibold mb-2">1 Month</h3>
-    <p><strong>High:</strong> ${crypto.monthlyHigh?.toLocaleString() || 'Loading...'}</p>
-    <p><strong>Low:</strong> ${crypto.monthlyLow?.toLocaleString() || 'Loading...'}</p>
-    <p><strong>Change:</strong> {crypto.monthlyChange?.toFixed(2)}%</p>
+  <div>
+    <p><strong>High (1 Month):</strong></p>
+    <p>${crypto.monthlyHigh?.toLocaleString() || 'Loading...'}</p>
+  </div>
+  <div>
+    <p><strong>Low (1 Month):</strong></p>
+    <p>${crypto.monthlyLow?.toLocaleString() || 'Loading...'}</p>
+  </div>
+  <div>
+    <p><strong>Change (1 Month):</strong></p>
+    <p>{crypto.monthlyChange?.toFixed(2)}%</p>
+  </div>
+
+  <div>
+    <p><strong>Volume (24h):</strong></p>
+    <p>{crypto.volume?.toLocaleString() || 'Loading...'}</p>
   </div>
 </div>
-
         </div>
 
         {/* Portfolio Selection and Trade Form */}

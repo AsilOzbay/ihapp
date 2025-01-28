@@ -779,7 +779,150 @@ app.get('/portfolio/:id', async (req, res) => {
   }
 });
 
+// -------------------- NEWS --------------------
 
+// -------------------- CACHE FOR CRYPTO NEWS --------------------
+let cachedNews = {
+  en: null,
+  tr: null,
+  lastUpdated: null,
+};
+
+// -------------------- FUNCTION TO FETCH NEWS FROM GEMINI --------------------
+// Define the Gemini API base URL with the API key
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBGPf3bbR4GjlBvCvsovewnA-0bnJh8LRo`;
+
+const fetchCryptoNews = async (language = "en", forceRefresh = false) => {
+  try {
+    const now = new Date();
+
+    // Refresh cache if older than 24 hours OR forceRefresh is triggered
+    const shouldRefresh = !cachedNews.lastUpdated || (now - cachedNews.lastUpdated) >= 24 * 60 * 60 * 1000 || forceRefresh;
+
+    if (!shouldRefresh) {
+      console.log(`Using cached crypto news (${language})`);
+      return cachedNews[language];
+    }
+
+    console.log(`Fetching new crypto news in ${language}...`);
+
+    const prompts = {
+      en: "can you give me 15 detailed daily and this weeks detailed news about cryptocurrency. i will directly fech this data to my school project. no graphs or images. know it will be on the right sidebar. make the structure of text looks good. ",
+      tr: "Bugünün kripto para piyasası trendlerinin kısa bir özetini sağlayın. Büyük fiyat hareketleri, en çok kazananlar ve önemli haber başlıklarını ekleyin.",
+    };
+
+    const requestBody = {
+      contents: [{ parts: [{ text: prompts[language] }] }],
+    };
+
+    // Use the correct URL
+    const response = await axios.post(GEMINI_API_URL, requestBody, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const newsSummary = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No news available.";
+
+    // Update cache
+    cachedNews[language] = newsSummary;
+    cachedNews.lastUpdated = new Date();
+
+    return newsSummary;
+  } catch (error) {
+    console.error("Error fetching crypto news:", error.message);
+    return language === "tr"
+      ? "Şu anda haberler getirilemiyor."
+      : "Unable to fetch news at the moment.";
+  }
+};
+
+// -------------------- API ENDPOINT: FETCH NEWS WITH CACHE --------------------
+app.get("/crypto-news", async (req, res) => {
+  try {
+    const language = req.query.lang || "en";
+    const forceRefresh = req.query.refresh === "true"; // Allow manual refresh
+
+    if (!["en", "tr"].includes(language)) {
+      return res.status(400).json({ message: "Invalid language. Use 'en' or 'tr'." });
+    }
+
+    const news = await fetchCryptoPanicNews(language, forceRefresh);
+
+    res.json({
+      language,
+      news,
+      lastUpdated: cachedCryptoPanicNews.lastUpdated,
+    });
+  } catch (error) {
+    console.error("Error fetching crypto news:", error.message);
+    res.status(500).json({ message: "Failed to fetch crypto news" });
+  }
+});
+
+// -------------------- AUTOMATIC CACHE REFRESH (EVERY 24 HOURS) --------------------
+const refreshCryptoNewsDaily = async () => {
+  console.log("Refreshing daily crypto news...");
+  await fetchCryptoNews("en", true);
+  await fetchCryptoNews("tr", true);
+  console.log("Crypto news updated.");
+};
+
+// Schedule news refresh every 24 hours
+setInterval(refreshCryptoNewsDaily, 24 * 60 * 60 * 1000);
+
+// Initial fetch on server startup
+refreshCryptoNewsDaily();
+
+
+let cachedCryptoPanicNews = {
+  en: null,
+  tr: null,
+  lastUpdated: null,
+};
+
+
+
+const fetchCryptoPanicNews = async (language = "en", forceRefresh = false) => {
+  try {
+    const now = new Date();
+
+    // Refresh cache if older than 24 hours or if forceRefresh is triggered
+    const shouldRefresh =
+      !cachedCryptoPanicNews.lastUpdated ||
+      now - cachedCryptoPanicNews.lastUpdated >= 24 * 60 * 60 * 1000 ||
+      forceRefresh;
+
+    if (!shouldRefresh) {
+      console.log(`Using cached CryptoPanic news (${language})`);
+      return cachedCryptoPanicNews[language];
+    }
+
+    console.log(`Fetching new CryptoPanic news in ${language}...`);
+
+    // Build query parameters
+    const params = {
+      auth_token: "e7e09895876a8e112c3a910e72d5399dc1782cb6", // Use the API key from the environment variable
+      regions: language,
+      kind: "news", // Fetch only news (exclude media)
+      public: true, // Use public API
+    };
+
+    // Make the GET request
+    const response = await axios.get("https://cryptopanic.com/api/free/v1/posts/?auth_token=e7e09895876a8e112c3a910e72d5399dc1782cb6", { params });
+
+    // Check and cache results
+    if (response.data.results && response.data.results.length > 0) {
+      cachedCryptoPanicNews[language] = response.data.results;
+      cachedCryptoPanicNews.lastUpdated = new Date();
+      return response.data.results;
+    }
+
+    console.log("No news found.");
+    return [];
+  } catch (error) {
+    console.error("Error fetching CryptoPanic news:", error.message);
+    return [];
+  }
+};
 
 // -------------------- START SERVER --------------------
 app.listen(PORT, () => {

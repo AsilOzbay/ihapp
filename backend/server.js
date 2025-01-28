@@ -78,7 +78,7 @@ app.post('/register', async (req, res) => {
       from: process.env.EMAIL_USER, // Sender address
       to: email, // Recipient address
       subject: 'Verify Your Email',
-      text: `Hello ${firstName},\n\nYour verification code is: ${verificationCode}\n\nThank you!`,
+      text: `Hello ${firstName},\n\nYour verification code is: ${verificationCode}\n\nPlease enter the code to the verification page!`,
     };
 
     // Send Email

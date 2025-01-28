@@ -20,10 +20,10 @@ const videos = [
 
 const VideoSection = () => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between h-full">
       <h2 className="text-2xl font-bold mb-4 text-blue-600">Educational Videos</h2>
       {videos.map((video) => (
-        <div key={video.id} className="mb-6">
+        <div key={video.id} className="flex-1 mb-6">
           <h3 className="font-semibold text-gray-700 mb-2">{video.title}</h3>
           <iframe
             src={video.url}

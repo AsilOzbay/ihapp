@@ -31,7 +31,7 @@ const Auth = () => {
         email,
         password,
       });
-      alert('Registration successful! Check your email for the verification code.');
+      alert('Please check your email for the verification code.');
       setStep('verify'); // Move to verification step
     } catch (err) {
       alert('Error: ' + (err.response?.data?.message || 'Registration failed'));

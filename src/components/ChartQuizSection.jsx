@@ -4,18 +4,18 @@ import { Chart, LineElement, PointElement, LinearScale, Title, Tooltip } from "c
 
 Chart.register(LineElement, PointElement, LinearScale, Title, Tooltip);
 
-const CoinGraph = () => {
+const ChartQuizSection = () => {
   // Data for two different graphs
   const graphs = [
     {
       title: "Bitcoin Price Chart",
       labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7", "Day 8", "Day 9", "Day 10"],
-      data: [12000, 12500, 11500, 14000, 13500, 15000, 13000, 15500, 14500, 16000], // Example data for Bitcoin
+      data: [12000, 12500, 11500, 14000, 13500, 15000, 13000, 15500, 14500, 16000], // Bitcoin data
     },
     {
       title: "Ethereum Price Chart",
       labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7", "Day 8", "Day 9", "Day 10"],
-      data: [2000, 2100, 1900, 2200, 2150, 2250, 2100, 2300, 2200, 2400], // Example data for Ethereum
+      data: [2000, 2100, 1900, 2200, 2150, 2250, 2100, 2300, 2200, 2400], // Ethereum data
     },
   ];
 
@@ -53,6 +53,16 @@ const CoinGraph = () => {
         ],
         correct: 0,
       },
+      {
+        question: "Which day had the largest price increase in Bitcoin chart?",
+        options: ["Day 4", "Day 7", "Day 2", "Day 8"], // Example; adjust dynamically if needed
+        correct: 0,
+      },
+      {
+        question: "What is the overall trend of Bitcoin chart?",
+        options: ["Uptrend", "Downtrend", "Flat", "Volatile"],
+        correct: 0,
+      },
     ],
     [
       {
@@ -73,6 +83,16 @@ const CoinGraph = () => {
           `Day 3: $${currentGraph.data[2]}`,
           `Day 9: $${currentGraph.data[8]}`,
         ],
+        correct: 0,
+      },
+      {
+        question: "Which day had the largest price increase in Ethereum chart?",
+        options: ["Day 4", "Day 7", "Day 2", "Day 8"], // Example; adjust dynamically if needed
+        correct: 0,
+      },
+      {
+        question: "What is the overall trend of Ethereum chart?",
+        options: ["Uptrend", "Downtrend", "Flat", "Volatile"],
         correct: 0,
       },
     ],
@@ -196,4 +216,4 @@ const CoinGraph = () => {
   );
 };
 
-export default CoinGraph;
+export default ChartQuizSection;

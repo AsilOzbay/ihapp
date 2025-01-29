@@ -31,11 +31,7 @@ const Auth = () => {
         email,
         password,
       });
-<<<<<<< Updated upstream
       alert('Please check your email for the verification code.');
-=======
-      alert('Please check your email for the verification.');
->>>>>>> Stashed changes
       setStep('verify'); // Move to verification step
     } catch (err) {
       alert('Error: ' + (err.response?.data?.message || 'Registration failed'));

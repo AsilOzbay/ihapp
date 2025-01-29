@@ -68,17 +68,17 @@ app.post('/register', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.EMAIL_USER, // Sender email address
+        pass: process.env.EMAIL_PASS, // App password or email password
       },
     });
 
     // Email Options
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
+      from: process.env.EMAIL_USER, // Sender address
+      to: email, // Recipient address
       subject: 'Verify Your Email',
-      text: `Hello ${firstName},\n\nYour verification code is: ${verificationCode}\n\nPlease enter this code to the verification page!`,
+      text: `Hello ${firstName},\n\nYour verification code is: ${verificationCode}\n\nThank you!`,
     };
 
     // Send Email

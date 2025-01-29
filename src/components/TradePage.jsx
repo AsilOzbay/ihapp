@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
+import FibonacciGraph from "./FibonacciGraph";
 import {
   Chart as ChartJS,
   LineElement,
@@ -432,7 +433,18 @@ console.log("TradePage received crypto:", crypto);
           <p>Loading chart...</p>
         )}
       </div>
+
+      {/* Fibonacci Graph Section */}
+      {/*
+<div className="mt-8">
+console.log("TradePage passing cryptoSymbol to FibonacciGraph:", crypto.symbol);
+<FibonacciGraph cryptoSymbol={crypto.symbol} />
+
+</div>
+*/}
     </div>
+
+    
   );
 };
 

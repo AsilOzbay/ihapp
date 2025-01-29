@@ -9,10 +9,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const User = require('./models/User');
+const fetch = require("node-fetch");
 const Portfolio = require('./models/Portfolio');
 const nodemailer = require('nodemailer');
 require("dotenv").config();
-
 
 
 // -------------------- CONFIG --------------------
@@ -1124,6 +1124,89 @@ app.get("/geminicrypto-news", async (req, res) => {
 });
 
 module.exports = generateNewsFromGemini;
+
+// -------------------- FIBONACCHI GRAPH --------------------
+
+
+
+
+
+const graphcache = new Map(); // In-memory cache
+
+// Middleware to clean up expired cache entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, { expiry }] of graphcache.entries()) {
+    if (expiry <= now) {
+      graphcache.delete(key);
+    }
+  }
+}, CACHE_DURATION);
+
+app.get("/api/fibonacci/:symbol/:timeframe", async (req, res) => {
+  const { symbol, timeframe } = req.params;
+  const cacheKey = `${symbol}-${timeframe}`;
+
+  // Check if the data is in the cache
+  if (graphcache.has(cacheKey)) {
+    console.log("Cache hit for:", cacheKey);
+    return res.json(graphcache.get(cacheKey).data);
+  }
+
+  try {
+    // Step 1: Fetch the list of coins from CoinGecko
+    const coinListResponse = await axios.get(`${COINGECKO_BASE_URL}/coins/list`);
+    const coinList = coinListResponse.data;
+
+    // Step 2: Map the symbol to CoinGecko ID
+    const coin = coinList.find(
+      (c) => c.symbol.toLowerCase() === symbol.toLowerCase() && c.id !== "batcat"
+    );
+
+    if (!coin) {
+      return res.status(404).json({ error: `Coin not found for symbol: ${symbol}` });
+    }
+
+    // Step 3: Fetch market chart data for the matched coin ID
+    const marketChartResponse = await axios.get(
+      `${COINGECKO_BASE_URL}/coins/${coin.id}/market_chart?x_cg_demo_api_key=CG-nQk3dYBGHBQAnS5mkq2V5c3v	`,
+      {
+        params: {
+          vs_currency: "usd",
+          days: timeframe,
+          interval: "daily",
+        },
+      }
+    );
+
+    const marketChart = marketChartResponse.data;
+
+    // Step 4: Combine data and cache it
+    const responseData = {
+      id: coin.id,
+      symbol: coin.symbol,
+      name: coin.name,
+      marketChart,
+    };
+
+    // Store the response in the cache
+    graphcache.set(cacheKey, {
+      data: responseData,
+      expiry: Date.now() + CACHE_DURATION,
+    });
+
+    console.log("Cache miss, data fetched and cached for:", cacheKey);
+
+    // Respond with the combined data
+    res.json(responseData);
+  } catch (error) {
+    console.error("Error in Fibonacci API:", error.message);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+module.exports = app;
+
 // -------------------- START SERVER --------------------
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

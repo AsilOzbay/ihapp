@@ -11,10 +11,14 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (portfolio) {
+    if (portfolio && Object.keys(portfolio).length > 0) {
       setPortfolioName(portfolio.name);
       setSelectedAvatar(portfolio.avatar || boyAvatar);
       setTransactions(portfolio.transactions || []);
+    } else {
+      setPortfolioName(""); // Ensure new portfolio starts empty
+      setSelectedAvatar(boyAvatar);
+      setTransactions([]);
     }
   }, [portfolio]);
 

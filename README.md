@@ -1,8 +1,9 @@
-Investing Hub v2 - Crypto Portfolio & Educational Platform
+INVESTING HUB V2 - CRYPTO PORTFOLIO & EDUCATIONAL PLATFORM
 
 Investing Hub v2, kullanıcıların kripto para birimlerini takip edebileceği, portföy yönetimi yapabileceği ve eğitim içeriklerine erişebileceği bir platformdur. Kullanıcılar, gerçek zamanlı piyasa verilerini izleyebilir, öğretici ve eğitici modüllerden yararlanarak eğlenceli vakit geçirebilir ve portföylerini detaylı şekilde yönetebilir.
 
-Özellikler
+
+ÖZELLİKLER
 
 ✅ Kullanıcı Kaydı & Kimlik Doğrulama: Kullanıcılar kayıt olup e-posta doğrulaması yaparak giriş yapabilir.
 
@@ -15,3 +16,9 @@ Investing Hub v2, kullanıcıların kripto para birimlerini takip edebileceği, 
 ✅ Grafik & İstatistikler: Fiyat hareketlerini farklı zaman dilimlerinde analiz edin.
 
 ✅ Güvenli Giriş & Kimlik Doğrulama: E-posta doğrulama ve JWT tabanlı güvenli giriş ve verilerin şifrelenmesi.
+
+
+
+GELİŞTİRME
+
+Backend için Node.js & Express.js, veritabanı olarak MongoDB, frontend için React.js kullanılmıştır.

@@ -14,6 +14,8 @@ const Portfolio = require('./models/Portfolio');
 const nodemailer = require('nodemailer');
 require("dotenv").config();
 
+//deneme
+
 
 // -------------------- CONFIG --------------------
 dotenv.config();

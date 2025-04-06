@@ -9,6 +9,8 @@ import Portfolio from "./screens/PortfolioScreen";
 import LearningHub from "./screens/LearningHubScreen";
 import Auth from "./screens/AuthScreen";
 
+//deneme
+
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 

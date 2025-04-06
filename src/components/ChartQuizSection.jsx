@@ -8,6 +8,9 @@ const ChartQuizSection = () => {
   // Data for two different graphs
   const graphs = [
     {
+
+
+      //ta 59 deneme
       title: "Bitcoin Price Chart",
       labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7", "Day 8", "Day 9", "Day 10"],
       data: [12000, 12500, 11500, 14000, 13500, 15000, 13000, 15500, 14500, 16000], // Bitcoin data

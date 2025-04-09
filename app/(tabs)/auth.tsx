@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 
-const Auth = () => {
+export default function AuthScreen() {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -13,8 +14,6 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [step, setStep] = useState("register"); // "register" or "verify"
-
-  const navigation = useNavigation();
 
   const handleRegister = async () => {
     if (password !== confirmPassword) {
@@ -29,9 +28,9 @@ const Auth = () => {
         email,
         password,
       });
-      Alert.alert("Success", "Please check your email for the verification code.");
+      Alert.alert("Success", "Check your email for the verification code.");
       setStep("verify");
-    } catch (err) {
+    } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Registration failed");
     }
   };
@@ -42,7 +41,7 @@ const Auth = () => {
       Alert.alert("Success", res.data.message);
       setIsLogin(true);
       setStep("register");
-    } catch (err) {
+    } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Verification failed");
     }
   };
@@ -53,15 +52,16 @@ const Auth = () => {
       await AsyncStorage.setItem("token", res.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
       Alert.alert("Success", `Welcome, ${res.data.user.firstName} ${res.data.user.lastName}`);
-      navigation.navigate("Home"); // Ana ekrana yönlendir
-    } catch (err) {
+      router.push("/home"); // login sonrası home ekranına yönlendirme
+    } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
       <View style={styles.authBox}>
+        {/* Tablar */}
         <View style={styles.tabs}>
           <TouchableOpacity onPress={() => setIsLogin(true)} style={isLogin ? styles.activeTab : styles.inactiveTab}>
             <Text style={styles.tabText}>Log In</Text>
@@ -71,6 +71,7 @@ const Auth = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Login / Register / Verify Alanları */}
         {isLogin ? (
           <>
             <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
@@ -99,20 +100,18 @@ const Auth = () => {
           </>
         )}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f9f9f9" },
-  authBox: { width: "85%", backgroundColor: "white", padding: 20, borderRadius: 10, shadowColor: "#000", shadowOpacity: 0.2, shadowOffset: { width: 0, height: 2 }, elevation: 5 },
+  authBox: { width: "85%", backgroundColor: "white", padding: 20, borderRadius: 10, elevation: 5 },
   tabs: { flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#ddd", marginBottom: 10 },
   activeTab: { flex: 1, borderBottomWidth: 2, borderBottomColor: "#007bff", paddingVertical: 8 },
   inactiveTab: { flex: 1, paddingVertical: 8 },
   tabText: { textAlign: "center", fontSize: 16, fontWeight: "bold", color: "#333" },
-  input: { width: "100%", padding: 10, borderWidth: 1, borderColor: "#ddd", borderRadius: 8, marginBottom: 10 },
-  button: { backgroundColor: "#007bff", paddingVertical: 12, borderRadius: 8, alignItems: "center" },
+  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 6, marginBottom: 10 },
+  button: { backgroundColor: "#007bff", padding: 12, borderRadius: 6, alignItems: "center" },
   buttonText: { color: "white", fontSize: 16, fontWeight: "bold" },
 });
-
-export default Auth;

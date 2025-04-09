@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, ScrollView, Linking } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  ScrollView,
+  Linking,
+} from "react-native";
 import axios from "axios";
 
 const RightSidebar = () => {
-  const [newsType, setNewsType] = useState("cryptoPanic"); // Varsayılan CryptoPanic haberleri
+  const [newsType, setNewsType] = useState("cryptoPanic");
   const [cryptoPanicNews, setCryptoPanicNews] = useState([]);
   const [dailyAnalysis, setDailyAnalysis] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -18,19 +26,13 @@ const RightSidebar = () => {
       const cryptoPanicEndpoint = "https://your-api.com/crypto-news";
       const geminiEndpoint = "https://your-api.com/geminicrypto-news?lang=en";
 
-      // API isteklerini aynı anda çalıştır
       const [cryptoPanicResponse, geminiResponse] = await Promise.all([
         axios.get(cryptoPanicEndpoint),
         axios.get(geminiEndpoint),
       ]);
 
-      // CryptoPanic haberlerini güncelle
       setCryptoPanicNews(cryptoPanicResponse.data.news || []);
-
-      // Gemini günlük analizini güncelle
       setDailyAnalysis(geminiResponse.data.news || "No analysis available.");
-
-      // Güncellenme zamanını ayarla
       setLastUpdated(
         geminiResponse.data.lastUpdated
           ? new Date(geminiResponse.data.lastUpdated).toLocaleString()
@@ -52,7 +54,6 @@ const RightSidebar = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>📢 Crypto News</Text>
 
-      {/* Haber Türü Seçimi */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           onPress={() => setNewsType("cryptoPanic")}
@@ -72,30 +73,29 @@ const RightSidebar = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Yükleniyor veya Hata Mesajı */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
-        <View>
+        <View style={{ width: "100%" }}>
           {newsType === "cryptoPanic" ? (
-            // CryptoPanic haberlerini listele
-            <FlatList
-              data={cryptoPanicNews}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.newsItem}
-                  onPress={() => Linking.openURL(item.url)}
-                >
-                  <Text style={styles.newsText}>{item.title}</Text>
-                </TouchableOpacity>
+            <>
+              {cryptoPanicNews.length === 0 ? (
+                <Text style={styles.emptyText}>No CryptoPanic news available.</Text>
+              ) : (
+                cryptoPanicNews.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.newsItem}
+                    onPress={() => Linking.openURL(item.url)}
+                  >
+                    <Text style={styles.newsText}>{item.title}</Text>
+                  </TouchableOpacity>
+                ))
               )}
-              ListEmptyComponent={<Text style={styles.emptyText}>No CryptoPanic news available.</Text>}
-            />
+            </>
           ) : (
-            // Günlük Analiz Göster
             <Text style={styles.analysisText}>{dailyAnalysis}</Text>
           )}
           <Text style={styles.lastUpdated}>🕒 Last updated: {lastUpdated}</Text>
@@ -113,7 +113,12 @@ const styles = StyleSheet.create({
   activeButton: { backgroundColor: "#007bff" },
   buttonText: { fontSize: 16, color: "#333" },
   activeButtonText: { color: "white" },
-  newsItem: { padding: 10, borderBottomWidth: 1, borderBottomColor: "#ddd", width: "100%" },
+  newsItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    width: "100%",
+  },
   newsText: { fontSize: 16, color: "#007bff" },
   analysisText: { fontSize: 16, color: "#222", padding: 10 },
   lastUpdated: { fontSize: 14, color: "#888", marginTop: 10 },

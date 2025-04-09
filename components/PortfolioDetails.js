@@ -5,10 +5,10 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  FlatList,
   StyleSheet,
   Image,
 } from "react-native";
+
 import { LineChart, PieChart } from "react-native-chart-kit";
 
 const PortfolioDetails = ({ portfolioId, onBack }) => {

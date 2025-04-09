@@ -1,27 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet, Alert } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import PortfolioCustomization from "../components/PortfolioCustomization";
-import PortfolioDetails from "../components/PortfolioDetails";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import PortfolioCustomization from "../../components/PortfolioCustomization";
+import PortfolioDetails from "../../components/PortfolioDetails";
 
-const PortfolioScreen = () => {
-  const navigation = useNavigation();
+export default function PortfolioScreen() {
   const [isDetailsVisible, setDetailsVisible] = useState(false);
-  const [user, setUser] = useState(null);
   const [isCustomizationVisible, setCustomizationVisible] = useState(false);
-  const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolio, setSelectedPortfolio] = useState(null);
+  const [portfolios, setPortfolios] = useState([]);
+  const [user, setUser] = useState(null);
 
-  // Portföyleri Fetch Et
+  // Fetch portfolios
   useEffect(() => {
     const fetchPortfolios = async () => {
       try {
-        const userData = JSON.parse(localStorage.getItem("user"));
+        const userDataString = await AsyncStorage.getItem("user");
+        const userData = userDataString ? JSON.parse(userDataString) : null;
         if (userData) {
           setUser(userData);
-          const response = await fetch(
-            `http://localhost:5000/portfolios?userId=${userData.id}`
-          );
+          const response = await fetch(`http://localhost:5000/portfolios?userId=${userData.id}`);
           const data = await response.json();
           setPortfolios(data);
         }
@@ -35,16 +33,11 @@ const PortfolioScreen = () => {
 
   const reloadPortfolios = async () => {
     try {
-      const userData = JSON.parse(localStorage.getItem("user"));
-      if (userData) {
-        const response = await fetch(
-          `http://localhost:5000/portfolios?userId=${userData.id}`
-        );
-        const data = await response.json();
-        setPortfolios(data);
-      }
+      const response = await fetch(`http://localhost:5000/portfolios?userId=${user?.id}`);
+      const data = await response.json();
+      setPortfolios(data);
     } catch (error) {
-      console.error("Error fetching portfolios:", error);
+      console.error("Error reloading portfolios:", error);
     }
   };
 
@@ -55,10 +48,13 @@ const PortfolioScreen = () => {
           <View style={styles.centeredContainer}>
             <Text style={styles.heading}>Crypto Portfolio Tracker</Text>
             <Text style={styles.subtitle}>
-              Keep track of your profits, losses, and portfolio valuation with our easy-to-use platform.
+              Keep track of your profits, losses, and portfolio valuation.
             </Text>
 
-            <TouchableOpacity style={styles.createButton} onPress={() => setCustomizationVisible(true)}>
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={() => setCustomizationVisible(true)}
+            >
               <Text style={styles.createButtonText}>Create New Portfolio</Text>
             </TouchableOpacity>
 
@@ -145,11 +141,10 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   portfolioName: { fontSize: 16, fontWeight: "bold", color: "#1E293B" },
-  transactionCount: { fontSize: 14, color: "#64748B" },
-  buttonGroup: { flexDirection: "row", gap: 8 },
-  editButton: { backgroundColor: "#10B981", padding: 8, borderRadius: 5 },
-  viewButton: { backgroundColor: "#3B82F6", padding: 8, borderRadius: 5 },
-  buttonText: { color: "white", fontSize: 14, fontWeight: "bold" },
+  transactionCount: { fontSize: 14, color: "#6B7280" },
+  buttonGroup: { flexDirection: "row", gap: 10 },
+  editButton: { backgroundColor: "#facc15", padding: 8, borderRadius: 6 },
+  viewButton: { backgroundColor: "#10b981", padding: 8, borderRadius: 6 },
+  buttonText: { color: "white", fontWeight: "bold" },
 });
 
-export default PortfolioScreen;

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 
 const ChartQuizSection = () => {
-  // Grafik Verileri
   const graphs = [
     {
       title: "Bitcoin Price Chart",
@@ -28,7 +27,6 @@ const ChartQuizSection = () => {
   const maxPriceIndex = currentGraph.data.indexOf(maxPrice);
   const minPriceIndex = currentGraph.data.indexOf(minPrice);
 
-  // Soru Verileri
   const questions = [
     [
       {
@@ -36,7 +34,7 @@ const ChartQuizSection = () => {
         options: [
           `Day 1: $${currentGraph.data[0]}`,
           `Day 5: $${currentGraph.data[4]}`,
-          `Day ${maxPriceIndex + 1}: $${maxPrice}`, // Doğru cevap
+          `Day ${maxPriceIndex + 1}: $${maxPrice}`,
           `Day 8: $${currentGraph.data[7]}`,
         ],
         correct: 2,
@@ -44,7 +42,7 @@ const ChartQuizSection = () => {
       {
         question: "What is the lowest price recorded in Bitcoin chart?",
         options: [
-          `Day ${minPriceIndex + 1}: $${minPrice}`, // Doğru cevap
+          `Day ${minPriceIndex + 1}: $${minPrice}`,
           `Day 6: $${currentGraph.data[5]}`,
           `Day 3: $${currentGraph.data[2]}`,
           `Day 9: $${currentGraph.data[8]}`,
@@ -79,10 +77,9 @@ const ChartQuizSection = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Interactive Coin Price Charts</Text>
 
-      {/* Grafik Seçim Butonları */}
       <View style={styles.graphSelection}>
         {graphs.map((graph, index) => (
           <TouchableOpacity
@@ -98,7 +95,6 @@ const ChartQuizSection = () => {
         ))}
       </View>
 
-      {/* LineChart Bileşeni */}
       <View style={styles.chartContainer}>
         <LineChart
           data={{
@@ -124,18 +120,20 @@ const ChartQuizSection = () => {
         />
       </View>
 
-      {/* Soru Bölümü */}
       <View style={styles.questionContainer}>
-        <Text style={styles.questionText}>{questions[selectedGraphIndex][currentQuestionIndex].question}</Text>
-        {questions[selectedGraphIndex][currentQuestionIndex].options.map((option, optionIndex) => (
+        <Text style={styles.questionText}>
+          {questions[selectedGraphIndex][currentQuestionIndex].question}
+        </Text>
+
+        {questions[selectedGraphIndex][currentQuestionIndex].options.map((option, index) => (
           <TouchableOpacity
-            key={optionIndex}
-            onPress={() => handleOptionClick(optionIndex)}
+            key={index}
+            onPress={() => handleOptionClick(index)}
             style={[
               styles.optionButton,
-              isAnswered && optionIndex === questions[selectedGraphIndex][currentQuestionIndex].correct
+              isAnswered && index === questions[selectedGraphIndex][currentQuestionIndex].correct
                 ? styles.correctOption
-                : isAnswered && optionIndex === selectedOption
+                : isAnswered && index === selectedOption
                 ? styles.wrongOption
                 : styles.defaultOption,
             ]}
@@ -145,17 +143,24 @@ const ChartQuizSection = () => {
           </TouchableOpacity>
         ))}
 
-        {/* Navigation Buttons */}
         <View style={styles.navigationButtons}>
-          <TouchableOpacity onPress={goToPreviousQuestion} disabled={currentQuestionIndex === 0} style={styles.navButton}>
+          <TouchableOpacity
+            onPress={goToPreviousQuestion}
+            disabled={currentQuestionIndex === 0}
+            style={styles.navButton}
+          >
             <Text style={styles.navButtonText}>Previous</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={goToNextQuestion} disabled={currentQuestionIndex === questions[selectedGraphIndex].length - 1} style={styles.navButton}>
+          <TouchableOpacity
+            onPress={goToNextQuestion}
+            disabled={currentQuestionIndex === questions[selectedGraphIndex].length - 1}
+            style={styles.navButton}
+          >
             <Text style={styles.navButtonText}>Next</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

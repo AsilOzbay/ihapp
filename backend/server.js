@@ -806,7 +806,7 @@ app.delete('/portfolio/:portfolioId/transaction/:transactionId', async (req, res
       return res.status(404).json({ message: 'Transaction not found.' });
     }
 
-    transaction.remove(); // Remove the transaction
+    portfolio.transactions = portfolio.transactions.filter(t => t._id.toString() !== transactionId); // Remove the transaction
     await portfolio.save(); // Save the updated portfolio
 
     res.status(200).json({ transactions: portfolio.transactions });

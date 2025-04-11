@@ -6,10 +6,12 @@ import ChartQuizSection from "../components/ChartQuizSection";
 
 export default function LearningHub() {
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
+    <div className="p-8 bg-gray-100 dark:bg-gray-900 text-black dark:text-white min-h-screen">
       <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-blue-700">Welcome to the Learning Hub</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-4xl font-bold text-blue-700 dark:text-blue-400">
+          Welcome to the Learning Hub
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-2">
           Explore cryptocurrencies and blockchain through videos, quizzes, and educational articles.
         </p>
       </header>

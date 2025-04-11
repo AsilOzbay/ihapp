@@ -7,13 +7,13 @@ import RightSidebar from "../components/RightSidebar";
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gray-100 relative">
-      <WelcomeBanner />
-
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
       {/* Sayfa Başlığı */}
       <div className="text-center py-6">
-        <h1 className="text-4xl font-bold text-gray-800">Crypto Dashboard</h1>
-        <p className="text-gray-500 text-lg mt-2">Follow the market, trade smart, grow your portfolio.</p>
+        <h1 className="text-4xl font-bold text-gray-800 dark:text-white">Crypto Dashboard</h1>
+        <p className="text-gray-500 dark:text-gray-400 text-lg mt-2">
+          Follow the market, trade smart, grow your portfolio.
+        </p>
       </div>
 
       {/* İçerik */}
@@ -28,7 +28,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* RightSidebar is NOT in a layout div anymore */}
+      {/* Sağ Kenar Çubuğu */}
       <RightSidebar />
     </div>
   );

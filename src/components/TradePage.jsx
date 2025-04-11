@@ -156,96 +156,60 @@ console.log("TradePage received crypto:", crypto);
 
 
   return (
-    <div className="bg-gray-100 min-h-screen p-6">
+    <div className="bg-gray-100 dark:bg-gray-900 text-black dark:text-white min-h-screen p-6">
       <button
         onClick={onBack}
         className="bg-blue-500 text-white px-4 py-2 rounded mb-6"
       >
         Back
       </button>
-
+  
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Crypto Details Section */}
-        <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-1">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 lg:col-span-1">
           <h1 className="text-2xl font-bold mb-4">{crypto.symbol}</h1>
           <p className="text-xl font-semibold mb-4 text-green-500">
             ${crypto.price.toLocaleString()}{" "}
             <span
-  className={`${
-    crypto.change > 0 ? "text-green-500" : "text-red-500"
-  }`}
->
-  ({crypto.change.toFixed(2)}%)
-</span>
+              className={`${
+                crypto.change > 0 ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              ({crypto.change.toFixed(2)}%)
+            </span>
           </p>
           <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-  <div>
-    <p><strong>High (1 Hour):</strong></p>
-    <p>${crypto.hourlyHigh?.toLocaleString() || 'Loading...'}</p>
-  </div>
-  <div>
-    <p><strong>Low (1 Hour):</strong></p>
-    <p>${crypto.hourlyLow?.toLocaleString() || 'Loading...'}</p>
-  </div>
-  <div>
-    <p><strong>Change (1 Hour):</strong></p>
-    <p>{crypto.hourlyChange?.toFixed(2)}%</p>
-  </div>
-
-  <div>
-    <p><strong>High (1 Day):</strong></p>
-    <p>${crypto.dailyHigh?.toLocaleString() || 'Loading...'}</p>
-  </div>
-  <div>
-    <p><strong>Low (1 Day):</strong></p>
-    <p>${crypto.dailyLow?.toLocaleString() || 'Loading...'}</p>
-  </div>
-  <div>
-    <p><strong>Change (1 Day):</strong></p>
-    <p>{crypto.dailyChange?.toFixed(2)}%</p>
-  </div>
-
-  <div>
-    <p><strong>High (1 Week):</strong></p>
-    <p>${crypto.weeklyHigh?.toLocaleString() || 'Loading...'}</p>
-  </div>
-  <div>
-    <p><strong>Low (1 Week):</strong></p>
-    <p>${crypto.weeklyLow?.toLocaleString() || 'Loading...'}</p>
-  </div>
-  <div>
-    <p><strong>Change (1 Week):</strong></p>
-    <p>{crypto.weeklyChange?.toFixed(2)}%</p>
-  </div>
-
-  <div>
-    <p><strong>High (1 Month):</strong></p>
-    <p>${crypto.monthlyHigh?.toLocaleString() || 'Loading...'}</p>
-  </div>
-  <div>
-    <p><strong>Low (1 Month):</strong></p>
-    <p>${crypto.monthlyLow?.toLocaleString() || 'Loading...'}</p>
-  </div>
-  <div>
-    <p><strong>Change (1 Month):</strong></p>
-    <p>{crypto.monthlyChange?.toFixed(2)}%</p>
-  </div>
-
-  <div>
-    <p><strong>Volume (24h):</strong></p>
-    <p>{crypto.volume?.toLocaleString() || 'Loading...'}</p>
-  </div>
-</div>
+            {/* Stat Cards */}
+            {[
+              ["High (1 Hour)", crypto.hourlyHigh],
+              ["Low (1 Hour)", crypto.hourlyLow],
+              ["Change (1 Hour)", `${crypto.hourlyChange?.toFixed(2)}%`],
+              ["High (1 Day)", crypto.dailyHigh],
+              ["Low (1 Day)", crypto.dailyLow],
+              ["Change (1 Day)", `${crypto.dailyChange?.toFixed(2)}%`],
+              ["High (1 Week)", crypto.weeklyHigh],
+              ["Low (1 Week)", crypto.weeklyLow],
+              ["Change (1 Week)", `${crypto.weeklyChange?.toFixed(2)}%`],
+              ["High (1 Month)", crypto.monthlyHigh],
+              ["Low (1 Month)", crypto.monthlyLow],
+              ["Change (1 Month)", `${crypto.monthlyChange?.toFixed(2)}%`],
+              ["Volume (24h)", crypto.volume],
+            ].map(([label, value], index) => (
+              <div key={index}>
+                <p><strong>{label}:</strong></p>
+                <p>{typeof value === "number" ? `$${value.toLocaleString()}` : value || 'Loading...'}</p>
+              </div>
+            ))}
+          </div>
         </div>
-
+  
         {/* Portfolio Selection and Trade Form */}
-        <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 lg:col-span-2">
           <h2 className="text-lg font-bold mb-4">Trade {crypto.symbol}</h2>
-
-          {/* Portfolio Selection Dropdown */}
+  
           <label className="block text-sm font-bold mb-2">Select Portfolio</label>
           <select
-            className="border rounded px-3 py-2 mb-4 w-full"
+            className="border rounded px-3 py-2 mb-4 w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
             value={selectedPortfolioId}
             onChange={(e) => setSelectedPortfolioId(e.target.value)}
           >
@@ -256,8 +220,7 @@ console.log("TradePage received crypto:", crypto);
               </option>
             ))}
           </select>
-
-          {/* Trade Input Fields */}
+  
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-bold mb-2">Action</label>
@@ -267,7 +230,7 @@ console.log("TradePage received crypto:", crypto);
                   className={`px-4 py-2 rounded ${
                     action === "buy"
                       ? "bg-green-500 text-white"
-                      : "bg-gray-200"
+                      : "bg-gray-200 dark:bg-gray-600 dark:text-white"
                   }`}
                 >
                   Buy
@@ -277,52 +240,56 @@ console.log("TradePage received crypto:", crypto);
                   className={`px-4 py-2 rounded ${
                     action === "sell"
                       ? "bg-red-500 text-white"
-                      : "bg-gray-200"
+                      : "bg-gray-200 dark:bg-gray-600 dark:text-white"
                   }`}
                 >
                   Sell
                 </button>
               </div>
             </div>
+  
             <div>
-  <label className="block text-sm font-bold mb-2">Price</label>
-  <div className="flex items-center space-x-2">
-    <input
-      type="number"
-      value={price}
-      onChange={(e) => setPrice(Number(e.target.value))}
-      className="w-full border rounded px-3 py-2"
-      step="0.01"
-      min="0"
-    />
-    <button
-      onClick={() => setPrice(crypto.price)}
-      className="bg-gray-200 text-sm px-3 py-2 rounded"
-    >
-      Use Real-Time Price
-    </button>
-  </div>
-</div>
+              <label className="block text-sm font-bold mb-2">Price</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  step="0.01"
+                  min="0"
+                />
+                <button
+                  onClick={() => setPrice(crypto.price)}
+                  className="bg-gray-200 dark:bg-gray-600 dark:text-white text-sm px-3 py-2 rounded"
+                >
+                  Use Real-Time Price
+                </button>
+              </div>
+            </div>
+  
             <div>
               <label className="block text-sm font-bold mb-2">Quantity</label>
               <input
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 step="0.01"
                 min="0"
               />
             </div>
+  
             <div>
-  <label className="block text-sm font-bold mb-2">Transaction Date & Time</label>
-  <input
-    type="datetime-local"
-    value={transactionDate}
-    onChange={(e) => setTransactionDate(e.target.value)}
-    className="w-full border rounded px-3 py-2"
-  />
-</div>
+              <label className="block text-sm font-bold mb-2">Transaction Date & Time</label>
+              <input
+                type="datetime-local"
+                value={transactionDate}
+                onChange={(e) => setTransactionDate(e.target.value)}
+                className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+  
             <div>
               <label className="block text-sm font-bold mb-2">Total</label>
               <p className="text-lg font-bold">
@@ -330,121 +297,110 @@ console.log("TradePage received crypto:", crypto);
               </p>
             </div>
           </div>
+  
           <button
             onClick={handleTrade}
             className="bg-blue-500 text-white px-4 py-2 rounded w-full"
           >
-           <p>Add To Portfolio As {action === "buy" ? "Purchase" : action === "sell" ? "Sale" : "Action"}</p>
-
+            <p>Add To Portfolio As {action === "buy" ? "Purchase" : action === "sell" ? "Sale" : "Action"}</p>
           </button>
+  
           {message && (
-            <p className="mt-4 text-center text-gray-700">{message}</p>
+            <p className="mt-4 text-center text-gray-700 dark:text-gray-300">{message}</p>
           )}
         </div>
       </div>
+  
+      {/* Timeframe Buttons */}
       <div className="flex space-x-4 mb-4">
-  {[
-    { label: "15 Minutes", value: "15m" },
-    { label: "Hourly", value: "1h" },
-    { label: "Daily", value: "1d" },
-    { label: "Monthly", value: "1M" },
-  ].map(({ label, value }) => (
-    <button
-      key={value}
-      onClick={() => setTimeframe(value)}
-      className={`px-4 py-2 rounded ${
-        timeframe === value ? "bg-blue-500 text-white" : "bg-gray-200"
-      }`}
-    >
-      {label}
-    </button>
-  ))}
-</div>
-
+        {[
+          { label: "15 Minutes", value: "15m" },
+          { label: "Hourly", value: "1h" },
+          { label: "Daily", value: "1d" },
+          { label: "Monthly", value: "1M" },
+        ].map(({ label, value }) => (
+          <button
+            key={value}
+            onClick={() => setTimeframe(value)}
+            className={`px-4 py-2 rounded ${
+              timeframe === value
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 dark:bg-gray-600 dark:text-white"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+  
       {/* Chart Section */}
-      <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
+      <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <h2 className="text-lg font-bold mb-4">{crypto.symbol} Price Chart</h2>
         {chartData ? (
           <div style={{ height: "400px" }}>
             <Line
-  data={chartData}
-  options={{
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: "index", // Shows tooltip for the x-axis position, even between points
-      intersect: false, // Allows hovering anywhere on the line, not just on points
-      axis: "x", // Forces tracking along the x-axis continuously
-    },
-    plugins: {
-      tooltip: {
-        position: "nearest", // Positions tooltip nearest to mouse cursor
-        callbacks: {
-          title: function (tooltipItems) {
-            if (!tooltipItems.length) return "";
-            const index = tooltipItems[0].dataIndex;
-            const dateLabel = chartData.labels[index];
-
-            const formattedDate = new Date(dateLabel).toLocaleString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: true,
-            });
-
-            return `Date: ${formattedDate}`;
-          },
-          label: function (tooltipItem) {
-            const price = tooltipItem.raw?.toFixed(2) || "N/A";
-            return `Price: $${price}`;
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          callback: function (value, index) {
-            const dateLabel = chartData.labels[index];
-            if (!dateLabel) return "N/A";
-
-            const formattedTime = new Date(dateLabel).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-
-            return formattedTime;
-          },
-        },
-      },
-      y: {
-        min: yAxisRange?.min,
-        max: yAxisRange?.max,
-      },
-    },
-  }}
-/>
-
+              data={chartData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                  mode: "index",
+                  intersect: false,
+                  axis: "x",
+                },
+                plugins: {
+                  tooltip: {
+                    position: "nearest",
+                    callbacks: {
+                      title: function (tooltipItems) {
+                        if (!tooltipItems.length) return "";
+                        const index = tooltipItems[0].dataIndex;
+                        const dateLabel = chartData.labels[index];
+                        const formattedDate = new Date(dateLabel).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          hour12: true,
+                        });
+                        return `Date: ${formattedDate}`;
+                      },
+                      label: function (tooltipItem) {
+                        const price = tooltipItem.raw?.toFixed(2) || "N/A";
+                        return `Price: $${price}`;
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    ticks: {
+                      callback: function (value, index) {
+                        const dateLabel = chartData.labels[index];
+                        if (!dateLabel) return "N/A";
+                        const formattedTime = new Date(dateLabel).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+                        return formattedTime;
+                      },
+                    },
+                  },
+                  y: {
+                    min: yAxisRange?.min,
+                    max: yAxisRange?.max,
+                  },
+                },
+              }}
+            />
           </div>
         ) : (
           <p>Loading chart...</p>
         )}
       </div>
-
-      {/* Fibonacci Graph Section */}
-      {/*
-<div className="mt-8">
-console.log("TradePage passing cryptoSymbol to FibonacciGraph:", crypto.symbol);
-<FibonacciGraph cryptoSymbol={crypto.symbol} />
-
-</div>
-*/}
     </div>
-
-    
   );
 };
 

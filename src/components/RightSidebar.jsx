@@ -42,55 +42,61 @@ const RightSidebar = () => {
 
   return (
     <>
-      {/* Button positioned relative to WelcomeBanner section */}
-      <div className="absolute top-[72px] right-4 z-50">
+      {/* Floating News Button */}
+      <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={togglePanel}
-          className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 shadow-lg"
+          className="bg-blue-600 dark:bg-blue-500 text-white p-3 rounded-full hover:bg-blue-700 dark:hover:bg-blue-600 shadow-lg transition"
           title="Toggle News"
         >
           📰
         </button>
       </div>
-
-      {/* Sliding Panel */}
+  
+      {/* Sliding News Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-[400px] bg-white shadow-lg z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto p-4 ${
+        className={`fixed top-0 right-0 h-full w-[400px] bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto p-4 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <h2 className="text-xl font-semibold mb-4">📢 Crypto News</h2>
-
+  
+        {/* Tab Switch */}
         <div className="mb-4 flex">
           <button
             onClick={() => setNewsType("cryptoPanic")}
-            className={`px-4 py-2 mr-2 rounded ${
-              newsType === "cryptoPanic" ? "bg-blue-600 text-white" : "bg-gray-200"
+            className={`px-4 py-2 mr-2 rounded transition ${
+              newsType === "cryptoPanic"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
           >
             CryptoPanic News
           </button>
           <button
             onClick={() => setNewsType("dailyAnalysis")}
-            className={`px-4 py-2 rounded ${
-              newsType === "dailyAnalysis" ? "bg-blue-600 text-white" : "bg-gray-200"
+            className={`px-4 py-2 rounded transition ${
+              newsType === "dailyAnalysis"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
           >
             Daily Analysis
           </button>
         </div>
-
+  
+        {/* News Content */}
         {loading ? (
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : (
-          <div className="text-gray-700">
+          <div className="text-gray-700 dark:text-gray-300">
             {newsType === "cryptoPanic" ? (
               <ul className="space-y-2">
                 {cryptoPanicNews.length > 0 ? (
                   cryptoPanicNews.map((item, index) => (
-                    <li key={index} className="border-b pb-2 mb-2">
+                    <li key={index} className="border-b border-gray-200 dark:border-gray-600 pb-2 mb-2">
                       <a
                         href={item.url}
                         target="_blank"
@@ -110,7 +116,9 @@ const RightSidebar = () => {
             )}
           </div>
         )}
-        <p className="text-sm text-gray-400 mt-2">🕒 Last updated: {lastUpdated}</p>
+  
+        {/* Last Updated */}
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">🕒 Last updated: {lastUpdated}</p>
       </div>
     </>
   );

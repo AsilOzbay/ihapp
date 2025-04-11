@@ -84,62 +84,64 @@ const FibonacciGraph = ({ cryptoSymbol }) => {
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
   return (
-    <div className="bg-gray-100 p-6">
-      {/* Timeframe Selector */}
-      <div className="flex justify-center space-x-4 mb-4">
-        {["1", "7", "30", "365"].map((tf) => (
-          <button
-            key={tf}
-            onClick={() => setTimeframe(tf)}
-            className={`px-4 py-2 rounded ${
-              timeframe === tf ? "bg-blue-500 text-white" : "bg-gray-200"
-            }`}
-          >
-            {tf === "1" ? "1 Day" : tf === "7" ? "1 Week" : tf === "30" ? "1 Month" : "1 Year"}
-          </button>
-        ))}
-      </div>
-
-      {/* Fibonacci Candlestick Chart */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-lg font-bold mb-4">Fibonacci Retracement</h2>
-        <div style={{ height: "400px" }}>
-          <Chart
-            type="candlestick"
-            data={{
-              labels: labels,
-              datasets: [
-                {
-                  label: "Candlestick Data",
-                  data: ohlcData,
-                  borderColor: "black",
-                  borderWidth: 1,
-                },
-                ...fibonacciLevels.map((level) => ({
-                  label: level.label,
-                  data: Array(labels.length).fill(level.value), // Horizontal lines
-                  borderColor: "rgba(255, 99, 132, 0.5)", // Soft red color
-                  borderDash: [5, 5], // Dashed line style
-                  pointRadius: 0,
-                  borderWidth: 1.5,
-                })),
-              ],
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: true },
-              },
-              scales: {
-                x: { title: { display: true, text: "Date" } },
-                y: { title: { display: true, text: "Price (USD)" } },
-              },
-            }}
-          />
+      <div className="bg-gray-100 dark:bg-gray-900 text-black dark:text-white p-6">
+        {/* Timeframe Selector */}
+        <div className="flex justify-center space-x-4 mb-4">
+          {["1", "7", "30", "365"].map((tf) => (
+            <button
+              key={tf}
+              onClick={() => setTimeframe(tf)}
+              className={`px-4 py-2 rounded transition ${
+                timeframe === tf
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
+              }`}
+            >
+              {tf === "1" ? "1 Day" : tf === "7" ? "1 Week" : tf === "30" ? "1 Month" : "1 Year"}
+            </button>
+          ))}
         </div>
-      </div>
-    </div>
+    
+        {/* Fibonacci Candlestick Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h2 className="text-lg font-bold mb-4">Fibonacci Retracement</h2>
+          <div style={{ height: "400px" }}>
+            <Chart
+              type="candlestick"
+              data={{
+                labels: labels,
+                datasets: [
+                  {
+                    label: "Candlestick Data",
+                    data: ohlcData,
+                    borderColor: "black",
+                    borderWidth: 1,
+                  },
+                  ...fibonacciLevels.map((level) => ({
+                    label: level.label,
+                    data: Array(labels.length).fill(level.value),
+                    borderColor: "rgba(255, 99, 132, 0.5)",
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    borderWidth: 1.5,
+                  })),
+                ],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: true },
+                },
+                scales: {
+                  x: { title: { display: true, text: "Date" } },
+                  y: { title: { display: true, text: "Price (USD)" } },
+                },
+              }}
+            />
+          </div>
+        </div>
+      </div>    
   );
 };
 

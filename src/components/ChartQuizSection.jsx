@@ -126,9 +126,9 @@ const ChartQuizSection = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-8">
-      <h2 className="text-2xl font-bold text-blue-600 text-center">Interactive Coin Price Charts</h2>
-
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mt-8 text-black dark:text-white">
+      <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 text-center">Interactive Coin Price Charts</h2>
+  
       {/* Graph Selection */}
       <div className="flex justify-center space-x-4 mb-6">
         {graphs.map((graph, index) => (
@@ -138,15 +138,15 @@ const ChartQuizSection = () => {
             className={`px-4 py-2 rounded-lg ${
               selectedGraphIndex === index
                 ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
           >
             {graph.title}
           </button>
         ))}
       </div>
-
-      {/* Chart Section */}
+  
+      {/* Chart */}
       <div className="w-full md:w-2/3 mx-auto">
         <Line
           data={{
@@ -168,35 +168,35 @@ const ChartQuizSection = () => {
           }}
         />
       </div>
-
-      {/* Question Section */}
+  
+      {/* Questions */}
       <div className="mt-8">
         <h3 className="text-xl font-bold mb-4">{questions[selectedGraphIndex][currentQuestionIndex].question}</h3>
         {questions[selectedGraphIndex][currentQuestionIndex].options.map((option, optionIndex) => (
           <button
             key={optionIndex}
             onClick={() => handleOptionClick(optionIndex)}
-            className={`block w-full text-left px-4 py-2 rounded-lg mb-2 border ${
+            className={`block w-full text-left px-4 py-2 rounded-lg mb-2 border transition ${
               isAnswered && optionIndex === questions[selectedGraphIndex][currentQuestionIndex].correct
                 ? "bg-green-500 text-white"
                 : isAnswered && optionIndex === selectedOption
                 ? "bg-red-500 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
+                : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-black dark:text-white"
             }`}
             disabled={isAnswered}
           >
             {option}
           </button>
         ))}
-
-        {/* Navigation Buttons */}
+  
+        {/* Nav Buttons */}
         <div className="flex justify-between mt-4">
           <button
             onClick={goToPreviousQuestion}
             disabled={currentQuestionIndex === 0}
             className={`px-4 py-2 rounded-lg ${
               currentQuestionIndex === 0
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
           >
@@ -207,7 +207,7 @@ const ChartQuizSection = () => {
             disabled={currentQuestionIndex === questions[selectedGraphIndex].length - 1}
             className={`px-4 py-2 rounded-lg ${
               currentQuestionIndex === questions[selectedGraphIndex].length - 1
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
           >
@@ -217,6 +217,6 @@ const ChartQuizSection = () => {
       </div>
     </div>
   );
-};
+}  
 
 export default ChartQuizSection;

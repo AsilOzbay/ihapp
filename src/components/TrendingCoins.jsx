@@ -36,16 +36,19 @@ const TopGainers = () => {
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <p className="text-gray-600 dark:text-gray-400">Loading...</p>;
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-lg shadow-lg p-6">
       <h2 className="text-xl font-bold mb-4">Top 5 {timeframe} Gainers</h2>
 
-      {/* 6) Render a dropdown or button group for timeframe selection */}
       <div className="mb-4">
-        <select value={timeframe} onChange={handleTimeframeChange}>
+        <select
+          value={timeframe}
+          onChange={handleTimeframeChange}
+          className="border px-3 py-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
+        >
           <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
           <option value="monthly">Monthly</option>
@@ -54,7 +57,7 @@ const TopGainers = () => {
 
       <table className="table-auto w-full text-left text-sm">
         <thead>
-          <tr>
+          <tr className="text-gray-600 dark:text-gray-300">
             <th className="px-4 py-2">Symbol</th>
             <th className="px-4 py-2">Price</th>
             <th className="px-4 py-2">Change (%)</th>
@@ -62,9 +65,9 @@ const TopGainers = () => {
         </thead>
         <tbody>
           {gainersData
-            .filter((coin) => coin.change > 0) // Exclude coins with non-positive changes
+            .filter((coin) => coin.change > 0)
             .map((coin, index) => (
-              <tr key={index} className="border-t">
+              <tr key={index} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="px-4 py-2">{coin.symbol}</td>
                 <td className="px-4 py-2">
                   ${coin.price ? coin.price.toLocaleString() : "N/A"}

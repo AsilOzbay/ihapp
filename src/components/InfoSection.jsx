@@ -35,24 +35,26 @@ const InfoSection = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-8">
-      <h2 className="text-2xl font-bold text-blue-600 text-center">{infoPool[index].title}</h2>
-      <p className="text-gray-700 mt-4 text-lg">{infoPool[index].text}</p>
-      <div className="flex justify-between mt-6">
-        <button 
-          onClick={prevParagraph} 
-          className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
-        >
-          Previous
-        </button>
-        <button 
-          onClick={nextParagraph} 
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-        >
-          Next
-        </button>
+      <div className="bg-white dark:bg-gray-800 text-black dark:text-white p-6 rounded-lg shadow-md mt-8">
+        <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 text-center">
+          {infoPool[index].title}
+        </h2>
+        <p className="text-gray-700 dark:text-gray-300 mt-4 text-lg">{infoPool[index].text}</p>
+        <div className="flex justify-between mt-6">
+          <button 
+            onClick={prevParagraph} 
+            className="bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition"
+          >
+            Previous
+          </button>
+          <button 
+            onClick={nextParagraph} 
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+          >
+            Next
+          </button>
+        </div>
       </div>
-    </div>
   );
 };
 

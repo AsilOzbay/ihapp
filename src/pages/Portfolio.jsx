@@ -63,39 +63,40 @@ const reloadPortfolios = async () => {
   }
 };
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow"></header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {!isCustomizationVisible && !isDetailsVisible ? (
-          <div className="text-center">
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">
-              Crypto Portfolio Tracker
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Keep track of your profits, losses, and portfolio valuation with
-              our easy-to-use platform.
-            </p>
-            <div className="space-x-4">
-              <button
-                onClick={handleCreatePortfolio}
-                className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600"
-              >
-                Create New Portfolio
-              </button>
-            </div>
-            {portfolios.length > 0 && (
+return (
+  <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
+    <header className="bg-white dark:bg-gray-800 shadow"></header>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      {!isCustomizationVisible && !isDetailsVisible ? (
+        <div className="text-center">
+          <h2 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
+            Crypto Portfolio Tracker
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            Keep track of your profits, losses, and portfolio valuation with
+            our easy-to-use platform.
+          </p>
+          <div className="space-x-4">
+            <button
+              onClick={handleCreatePortfolio}
+              className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600"
+            >
+              Create New Portfolio
+            </button>
+          </div>
+
+          {portfolios.length > 0 && (
             <div className="mt-12">
               <h3 className="text-2xl font-bold mb-6">Your Portfolios</h3>
               <div className="space-y-4">
                 {portfolios.map((portfolio) => (
                   <div
                     key={portfolio._id}
-                    className="bg-white shadow rounded-lg p-4 flex justify-between items-center"
+                    className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 flex justify-between items-center"
                   >
                     <div>
                       <h4 className="text-lg font-bold">{portfolio.name}</h4>
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-gray-400">
                         Transactions: {portfolio.transactions.length}
                       </p>
                     </div>
@@ -120,25 +121,27 @@ const reloadPortfolios = async () => {
                 ))}
               </div>
             </div>
-          )}</div>
-        ) : isCustomizationVisible ? (
-          <PortfolioCustomization
-            portfolio={selectedPortfolio}
-            userId={user?.id}
-            onBack={() =>{ setCustomizationVisible(false)
-              reloadPortfolios();
-            }}
-             // Portföyleri tekrar yükle
-          />
-        ) : (
-          <PortfolioDetails
-            portfolioId={selectedPortfolio?._id}
-            onBack={() =>{ setDetailsVisible(false)
-              reloadPortfolios();
-            }} // Detaylardan döndükten sonra da portföyleri yükle
-          />
-        )}
-      </main>
-    </div>
-  );
+          )}
+        </div>
+      ) : isCustomizationVisible ? (
+        <PortfolioCustomization
+          portfolio={selectedPortfolio}
+          userId={user?.id}
+          onBack={() => {
+            setCustomizationVisible(false);
+            reloadPortfolios();
+          }}
+        />
+      ) : (
+        <PortfolioDetails
+          portfolioId={selectedPortfolio?._id}
+          onBack={() => {
+            setDetailsVisible(false);
+            reloadPortfolios();
+          }}
+        />
+      )}
+    </main>
+  </div>
+);
 }

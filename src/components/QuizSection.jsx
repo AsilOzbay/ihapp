@@ -67,41 +67,45 @@ export default function Quiz() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white dark:bg-gray-800 text-black dark:text-white p-6 rounded-lg shadow-md">
       <h1 className="text-2xl font-bold text-center mb-4">Crypto Quiz</h1>
-      <div className="bg-white shadow-md p-4 rounded-lg">
+  
+      <div className="bg-white dark:bg-gray-900 shadow-md p-4 rounded-lg">
         {isTestFinished ? (
-          // Test bittiğinde sonu göster
           <div className="text-center">
             <h2 className="text-xl font-semibold">Test Completed</h2>
-            <p className="mt-2">Your Final Score: <span className="font-bold">{score}</span> / {questions.length}</p>
+            <p className="mt-2">
+              Your Final Score: <span className="font-bold">{score}</span> / {questions.length}
+            </p>
           </div>
         ) : (
           <>
             <h2 className="text-xl font-semibold mb-4">{questions[currentQuestion].question}</h2>
+  
             <div className="flex flex-col space-y-2">
               {questions[currentQuestion].options.map((option, index) => (
                 <button
                   key={index}
                   onClick={() => handleOptionClick(index)}
-                  className={`p-2 text-left border rounded-lg ${
+                  className={`p-2 text-left border rounded-lg transition ${
                     isAnswered && index === questions[currentQuestion].correct
                       ? "bg-green-500 text-white"
                       : isAnswered && index === selectedOption
                       ? "bg-red-500 text-white"
-                      : "bg-gray-100"
-                  } hover:bg-gray-200`}
-                  disabled={isAnswered} // Yanıtlandıysa butonları devre dışı bırak
+                      : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                  disabled={isAnswered}
                 >
                   {option}
                 </button>
               ))}
             </div>
+  
             {isAnswered && (
-              <div className="mt-4">
+              <div className="mt-4 text-center">
                 <button
                   onClick={handleNextQuestion}
-                  className="bg-blue-500 text-white p-2 rounded-lg"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
                 >
                   Next Question
                 </button>
@@ -111,5 +115,5 @@ export default function Quiz() {
         )}
       </div>
     </div>
-  );
+  );  
 }

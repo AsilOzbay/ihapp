@@ -1,13 +1,16 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
+  const { theme, setTheme } = useTheme();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null); // Ref tanımı
   const navigate = useNavigate();
-  const location = useLocation(); // Kullanıcının mevcut konumunu takip eder
+  const location = useLocation();
 
   useEffect(() => {
-    // localStorage'dan kullanıcı bilgilerini çek
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -18,8 +21,22 @@ export default function Navbar() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    navigate('/auth'); // Çıkış yaptıktan sonra login sayfasına yönlendir
+    navigate('/auth');
   };
+
+  // ✅ Click-outside kapatma davranışı
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
@@ -45,11 +62,45 @@ export default function Navbar() {
             </button>
           </div>
         ) : (
-          <Link to="/auth"
-                state={{ from: location.pathname }} // Auth sayfasına geldiği yer bilgisini aktar
-                className="hover:text-gray-400">Login/Register
+          <Link
+            to="/auth"
+            state={{ from: location.pathname }}
+            className="hover:text-gray-400"
+          >
+            Login/Register
           </Link>
-          
+        )}
+      </div>
+
+      {/* ⚙️ Tema Dropdown */}
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="bg-gray-700 px-2 py-1 rounded"
+        >
+          ⚙️
+        </button>
+        {showDropdown && (
+          <div className="absolute right-0 mt-2 bg-white dark:bg-gray-800 text-black dark:text-white shadow-md rounded w-40 z-50">
+            <button
+              className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={() => {
+                setTheme('light');
+                setShowDropdown(false);
+              }}
+            >
+              ☀️ Light Mode
+            </button>
+            <button
+              className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={() => {
+                setTheme('dark');
+                setShowDropdown(false);
+              }}
+            >
+              🌙 Dark Mode
+            </button>
+          </div>
         )}
       </div>
     </nav>

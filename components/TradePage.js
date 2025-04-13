@@ -70,7 +70,10 @@ const TradePage = ({ crypto, onBack }) => {
       return;
     }
 
-    const total = (quantity * price).toFixed(2);
+    const total = (Number(quantity) && Number(price))
+    ? (Number(quantity) * Number(price)).toFixed(2)
+    : '0.00';
+  
     try {
       const response = await fetch(`http://localhost:5000/portfolio/${selectedPortfolioId}/transaction`, {
         method: "POST",
@@ -105,9 +108,12 @@ const TradePage = ({ crypto, onBack }) => {
       <View style={styles.card}>
         <Text style={styles.cryptoTitle}>{crypto.symbol}</Text>
         <Text style={styles.cryptoPrice}>${crypto.price.toLocaleString()}</Text>
-        <Text style={[styles.cryptoChange, crypto.change > 0 ? styles.positiveChange : styles.negativeChange]}>
-          ({crypto.change.toFixed(2)}%)
-        </Text>
+        <Text style={[
+  styles.cryptoChange, 
+  crypto?.change > 0 ? styles.positiveChange : styles.negativeChange
+]}>
+  ({typeof crypto?.change === 'number' ? crypto.change.toFixed(2) : '0.00'}%)
+</Text>
       </View>
 
       {/* Portfolio Selection */}
@@ -143,7 +149,11 @@ const TradePage = ({ crypto, onBack }) => {
           }} />
         )}
 
-        <Text style={styles.totalText}>Total: ${(quantity * price).toFixed(2)}</Text>
+<Text style={styles.totalText}>
+  Total: ${(!isNaN(quantity) && !isNaN(price)) 
+    ? (Number(quantity) * Number(price)).toFixed(2) 
+    : '0.00'}
+</Text>
         <TouchableOpacity onPress={handleTrade} style={styles.tradeButton}>
           <Text style={styles.tradeButtonText}>Execute Trade</Text>
         </TouchableOpacity>

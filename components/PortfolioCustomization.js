@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet } from "react-native";
-
-const boyAvatar = require("../assets/images/boy_3984629.png");
-const girlAvatar = require("../assets/images/girl_3984664.png");
+import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import boyAvatar from "../assets/images/boy_3984629.png";
+import girlAvatar from "../assets/images/girl_3984664.png";
 
 const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
   const [portfolioName, setPortfolioName] = useState(portfolio?.name || "");
@@ -13,12 +12,12 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (portfolio) {
+    if (portfolio && Object.keys(portfolio).length > 0) {
       setPortfolioName(portfolio.name);
       setSelectedAvatar(portfolio.avatar || boyAvatar);
       setTransactions(portfolio.transactions || []);
     } else {
-      setPortfolioName("");
+      setPortfolioName(""); // Ensure new portfolio starts empty
       setSelectedAvatar(boyAvatar);
       setTransactions([]);
     }
@@ -34,6 +33,7 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
     const endpoint = portfolio
       ? `http://localhost:5000/portfolio/${portfolio._id}`
       : "http://localhost:5000/create-portfolio";
+
     const method = portfolio ? "PUT" : "POST";
 
     try {
@@ -50,7 +50,7 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
       const result = await response.json();
       if (response.ok) {
         setMessage("Portfolio saved successfully!");
-        onBack();
+        onBack(); // Return to portfolio list after saving
       } else {
         setMessage(result.message || "Error saving portfolio.");
       }
@@ -61,6 +61,70 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
       setLoading(false);
     }
   };
+
+  const addTransaction = async (transaction) => {
+    try {
+      const response = await fetch(`http://localhost:5000/portfolio/${portfolio._id}/transaction`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(transaction),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setTransactions(result.portfolio.transactions);
+      } else {
+        console.error("Failed to add transaction:", result.message);
+      }
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+    }
+  };
+
+  const deleteTransaction = async (transactionId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/portfolio/${portfolio._id}/transaction/${transactionId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+        setTransactions(result.transactions); // Update the list
+        setMessage("Transaction deleted successfully!");
+      } else {
+        console.error("Failed to delete transaction:", result.message);
+      }
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+    }
+  };
+
+  const handleEditSubmit = async (editedTransaction) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/portfolio/${portfolio._id}/transaction/${editedTransaction._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editedTransaction),
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+        setTransactions(result.transactions);
+        setEditingTransaction(null); // Exit editing mode
+      } else {
+        console.error("Failed to update transaction:", result.message);
+      }
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+    }
+  };
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -73,37 +137,94 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
 
         <Text style={styles.label}>Portfolio Name</Text>
         <TextInput
-          style={styles.input}
           value={portfolioName}
           onChangeText={setPortfolioName}
+          style={styles.input}
           placeholder="Enter portfolio name"
         />
 
         <Text style={styles.label}>Select Avatar</Text>
         <View style={styles.avatarContainer}>
-          <TouchableOpacity onPress={() => setSelectedAvatar(boyAvatar)}>
-            <Image source={boyAvatar} style={[styles.avatar, selectedAvatar === boyAvatar && styles.selectedAvatar]} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSelectedAvatar(girlAvatar)}>
-            <Image source={girlAvatar} style={[styles.avatar, selectedAvatar === girlAvatar && styles.selectedAvatar]} />
-          </TouchableOpacity>
+          {[boyAvatar, girlAvatar].map((avatar, index) => (
+            <TouchableOpacity key={index} onPress={() => setSelectedAvatar(avatar)}>
+              <Image
+                source={avatar}
+                style={[
+                  styles.avatar,
+                  selectedAvatar === avatar && styles.selectedAvatar,
+                ]}
+              />
+            </TouchableOpacity>
+          ))}
         </View>
 
-        <TouchableOpacity onPress={savePortfolio} style={styles.saveButton} disabled={isLoading}>
-          <Text style={styles.saveButtonText}>{isLoading ? "Saving..." : "Save Portfolio"}</Text>
+        <TouchableOpacity
+          onPress={savePortfolio}
+          style={styles.saveButton}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Portfolio</Text>
+          )}
         </TouchableOpacity>
-        {message ? <Text style={styles.message}>{message}</Text> : null}
+
+        {!!message && <Text style={styles.message}>{message}</Text>}
       </View>
 
       {portfolio && (
-        <View style={styles.transactionsContainer}>
+        <View style={styles.card}>
           <Text style={styles.title}>Transactions</Text>
           {transactions.map((transaction) => (
-            <View key={transaction._id} style={styles.transactionItem}>
-              <Text style={styles.transactionText}>
-                {transaction.action.toUpperCase()} {transaction.quantity} {transaction.symbol} @ $
-                {transaction.price.toFixed(2)}
-              </Text>
+            <View key={transaction._id} style={styles.transactionRow}>
+              {isEditingTransaction?._id === transaction._id ? (
+                <View style={styles.editRow}>
+                  <TextInput
+                    value={isEditingTransaction.symbol}
+                    onChangeText={(val) => setEditingTransaction({ ...isEditingTransaction, symbol: val })}
+                    style={styles.transactionInput}
+                  />
+                  <TextInput
+                    value={String(isEditingTransaction.quantity)}
+                    keyboardType="numeric"
+                    onChangeText={(val) => setEditingTransaction({ ...isEditingTransaction, quantity: +val })}
+                    style={styles.transactionInput}
+                  />
+                  <TextInput
+                    value={String(isEditingTransaction.price)}
+                    keyboardType="numeric"
+                    onChangeText={(val) => setEditingTransaction({ ...isEditingTransaction, price: +val })}
+                    style={styles.transactionInput}
+                  />
+                  <TouchableOpacity
+                    onPress={() => handleEditSubmit(isEditingTransaction)}
+                    style={styles.editSaveButton}
+                  >
+                    <Text style={styles.buttonText}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <Text>
+                    {transaction.action.toUpperCase()} {transaction.quantity} {transaction.symbol} @ ${transaction.price.toFixed(2)}
+                  </Text>
+                  <View style={styles.buttonGroup}>
+                    <TouchableOpacity
+                      onPress={() => setEditingTransaction(transaction)}
+                      style={styles.editButton}
+                    >
+                      <Text style={styles.buttonText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => deleteTransaction(transaction._id)}
+                      style={styles.deleteButton}
+                    >
+                      <Text style={styles.buttonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
             </View>
           ))}
         </View>
@@ -113,22 +234,116 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 15, backgroundColor: "#f9f9f9", alignItems: "center" },
-  backButton: { alignSelf: "flex-start", marginBottom: 10 },
-  backButtonText: { fontSize: 16, color: "#555" },
-  card: { width: "100%", maxWidth: 400, backgroundColor: "#fff", padding: 20, borderRadius: 8, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 10, color: "#333" },
-  label: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, fontSize: 16, marginBottom: 10 },
-  avatarContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 15 },
-  avatar: { width: 60, height: 60, borderRadius: 30, marginHorizontal: 10 },
-  selectedAvatar: { borderWidth: 2, borderColor: "#007bff" },
-  saveButton: { backgroundColor: "#007bff", padding: 12, borderRadius: 5, alignItems: "center", marginTop: 10 },
-  saveButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  message: { marginTop: 10, fontSize: 16, color: "green", textAlign: "center" },
-  transactionsContainer: { marginTop: 20, width: "100%", maxWidth: 400, backgroundColor: "#fff", padding: 15, borderRadius: 8, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  transactionItem: { borderBottomWidth: 1, borderBottomColor: "#ddd", paddingVertical: 8 },
-  transactionText: { fontSize: 16 },
+  container: {
+    padding: 20,
+  },
+  backButton: {
+    marginBottom: 20,
+    alignSelf: "flex-start",
+    backgroundColor: "#6B7280",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: "#fff",
+  },
+  card: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    elevation: 2,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  label: {
+    marginBottom: 4,
+    fontWeight: "500",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  avatarContainer: {
+    flexDirection: "row",
+    marginBottom: 16,
+    gap: 10,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    marginRight: 10,
+  },
+  selectedAvatar: {
+    borderWidth: 2,
+    borderColor: "#3B82F6",
+  },
+  saveButton: {
+    backgroundColor: "#3B82F6",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  message: {
+    marginTop: 12,
+    textAlign: "center",
+    color: "#10B981",
+  },
+  transactionRow: {
+    borderBottomWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingVertical: 8,
+  },
+  editRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  transactionInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 6,
+    width: "20%",
+    marginRight: 6,
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    marginTop: 4,
+  },
+  editButton: {
+    backgroundColor: "#F59E0B",
+    padding: 8,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  deleteButton: {
+    backgroundColor: "#EF4444",
+    padding: 8,
+    borderRadius: 6,
+  },
+  editSaveButton: {
+    backgroundColor: "#10B981",
+    padding: 8,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  buttonText: {
+    color: "#fff",
+  },
 });
 
 export default PortfolioCustomization;

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import PortfolioCustomization from "../../components/PortfolioCustomization";
-import PortfolioDetails from "../../components/PortfolioDetails";
+import PortfolioCustomization from "../components/PortfolioCustomization";
+import PortfolioDetails from "../components/PortfolioDetails";
 
 export default function PortfolioScreen() {
   const [isDetailsVisible, setDetailsVisible] = useState(false);

@@ -1,10 +1,10 @@
 import React from "react";
 import { View, Text, ScrollView, SafeAreaView, StyleSheet } from "react-native";
-import WelcomeBanner from "../../components/WelcomeBanner";
-import TrendingCoins from "../../components/TrendingCoins";
-import TopExchanges from "../../components/TopExchanges";
-import CryptoPricesTable from "../../components/CryptoPricesTable";
-import RightSidebar from "../../components/RightSidebar";
+import WelcomeBanner from "../components/WelcomeBanner";
+import TrendingCoins from "../components/TrendingCoins";
+import TopExchanges from "../components/TopExchanges";
+import CryptoPricesTable from "../components/CryptoPricesTable";
+import RightSidebar from "../components/RightSidebar";
 
 export default function HomeScreen() {
   return (

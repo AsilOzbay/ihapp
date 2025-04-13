@@ -29,9 +29,26 @@ const VideoSection = () => {
         <View key={item.id} style={styles.videoContainer}>
           <Text style={styles.videoTitle}>{item.title}</Text>
           <WebView
-            source={{ uri: item.url }}
+            originWhitelist={["*"]}
+            source={{
+              html: `
+                <html>
+                  <body style="margin:0;padding:0;">
+                    <iframe 
+                      width="100%" 
+                      height="100%" 
+                      src="${item.url}" 
+                      frameborder="0" 
+                      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen
+                    ></iframe>
+                  </body>
+                </html>
+              `,
+            }}
             style={styles.video}
             javaScriptEnabled
+            domStorageEnabled
             allowsFullscreenVideo
           />
         </View>
@@ -54,6 +71,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 10,
     borderRadius: 8,
+    overflow: "hidden",
   },
   videoTitle: {
     fontSize: 16,
@@ -61,7 +79,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: "#444",
   },
-  video: { height: 200, borderRadius: 10 },
+  video: { height: 200 },
 });
 
 export default VideoSection;

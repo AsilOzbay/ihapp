@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, ScrollView, SafeAreaView, StyleSheet } from "react-native";
-import VideoSection from "../../components/VideoSection";
-import QuizSection from "../../components/QuizSection";
-import InfoSection from "../../components/InfoSection";
-import ChartQuizSection from "../../components/ChartQuizSection";
+import VideoSection from "../components/VideoSection";
+import QuizSection from "../components/QuizSection";
+import InfoSection from "../components/InfoSection";
+import ChartQuizSection from "../components/ChartQuizSection";
 
 export default function LearningHubScreen() {
   return (

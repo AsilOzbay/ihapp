@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
-
+import { API_BASE_URL } from "./env-config";
 const ChartQuizSection = () => {
   const graphs = [
     {

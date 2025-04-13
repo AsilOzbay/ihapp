@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "./env-config";
 import {
   View,
   Text,
@@ -21,7 +22,7 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
   useEffect(() => {
     const fetchPortfolioDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/portfolio/${portfolioId}`);
+        const response = await fetch(`http://${API_BASE_URL}/portfolio/${portfolioId}`);
         if (!response.ok) throw new Error("Failed to fetch portfolio details");
         const data = await response.json();
         setPortfolio(data);
@@ -50,7 +51,7 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
         }));
 
         // Fetch current prices
-        const pricesResponse = await fetch(`http://localhost:5000/crypto-data`);
+        const pricesResponse = await fetch(`http://${API_BASE_URL}/crypto-data`);
         const pricesData = await pricesResponse.json();
         const updatedHoldings = holdingsArray.map((holding) => {
           const currentPrice = pricesData.data.find(

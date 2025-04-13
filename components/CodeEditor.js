@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import CodeEditor from "@rivascva/react-native-code-editor";
-
+import { API_BASE_URL } from "../env-config";
 const MobileCodeEditor = () => {
   const [code, setCode] = useState("// Write your code here...");
 

@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvo
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useRouter } from "expo-router";
-
+import { API_BASE_URL } from "./env-config";
 export default function AuthScreen() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
@@ -22,7 +22,7 @@ export default function AuthScreen() {
     }
 
     try {
-      await axios.post("https://your-api.com/register", {
+      await axios.post('http://${API_BASE_URL}/register', {
         firstName,
         lastName,
         email,
@@ -37,7 +37,7 @@ export default function AuthScreen() {
 
   const handleVerifyEmail = async () => {
     try {
-      const res = await axios.post("https://your-api.com/verify", { email, verificationCode });
+      const res = await axios.post('http://${API_BASE_URL}/verify', { email, verificationCode });
       Alert.alert("Success", res.data.message);
       setIsLogin(true);
       setStep("register");
@@ -48,7 +48,7 @@ export default function AuthScreen() {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post("https://your-api.com/login", { email, password });
+      const res = await axios.post('http://${API_BASE_URL}/login', { email, password });
       await AsyncStorage.setItem("token", res.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
       Alert.alert("Success", `Welcome, ${res.data.user.firstName} ${res.data.user.lastName}`);

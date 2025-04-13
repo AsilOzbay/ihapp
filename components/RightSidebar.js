@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "./env-config";
 import {
   View,
   Text,
@@ -23,8 +24,8 @@ const RightSidebar = () => {
       setLoading(true);
       setError(null);
 
-      const cryptoPanicEndpoint = "http://localhost:5000/crypto-news";
-      const geminiEndpoint = "http://localhost:5000/geminicrypto-news?lang=en";
+      const cryptoPanicEndpoint = `http://${API_BASE_URL}/crypto-news`;
+      const geminiEndpoint = `http://${API_BASE_URL}/geminicrypto-news?lang=en`;
 
       const [cryptoPanicResponse, geminiResponse] = await Promise.all([
         axios.get(cryptoPanicEndpoint),

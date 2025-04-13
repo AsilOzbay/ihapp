@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { LineChart } from "react-native-chart-kit";
-
+import { API_BASE_URL } from "./env-config";
 const FibonacciGraph = ({ cryptoSymbol }) => {
   const [timeframe, setTimeframe] = useState("7"); // Varsayılan: 1 Hafta
   const [ohlcData, setOhlcData] = useState([]); // OHLC verileri
@@ -19,7 +19,7 @@ const FibonacciGraph = ({ cryptoSymbol }) => {
     const fetchFibonacciData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:5000/api/fibonacci/${cryptoSymbol}/${timeframe}`);
+        const response = await fetch(`http://${API_BASE_URL}/api/fibonacci/${cryptoSymbol}/${timeframe}`);
         if (!response.ok) {
           throw new Error("Failed to fetch Fibonacci data from backend.");
         }

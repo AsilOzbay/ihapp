@@ -1,15 +1,38 @@
+type Transaction = {
+  symbol: string;
+  action: "buy" | "sell";
+  quantity: number;
+  price: number;
+  total: number;
+  date: string;
+};
+
+type Portfolio = {
+  _id: string;
+  name: string;
+  avatar?: string;
+  transactions: Transaction[];
+};
+
+type User = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PortfolioCustomization from "../components/PortfolioCustomization";
 import PortfolioDetails from "../components/PortfolioDetails";
-
+import { API_BASE_URL } from "./env-config";
 export default function PortfolioScreen() {
   const [isDetailsVisible, setDetailsVisible] = useState(false);
   const [isCustomizationVisible, setCustomizationVisible] = useState(false);
-  const [selectedPortfolio, setSelectedPortfolio] = useState(null);
-  const [portfolios, setPortfolios] = useState([]);
-  const [user, setUser] = useState(null);
+  const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null);
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [user, setUser] = useState<User | null>(null);
 
   // Fetch portfolios
   useEffect(() => {
@@ -19,7 +42,7 @@ export default function PortfolioScreen() {
         const userData = userDataString ? JSON.parse(userDataString) : null;
         if (userData) {
           setUser(userData);
-          const response = await fetch(`http://localhost:5000/portfolios?userId=${userData.id}`);
+          const response = await fetch(`http://${API_BASE_URL}/portfolios?userId=${userData.id}`);
           const data = await response.json();
           setPortfolios(data);
         }
@@ -33,7 +56,7 @@ export default function PortfolioScreen() {
 
   const reloadPortfolios = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/portfolios?userId=${user?.id}`);
+      const response = await fetch(`http://${API_BASE_URL}/portfolios?userId=${user?.id}`);
       const data = await response.json();
       setPortfolios(data);
     } catch (error) {

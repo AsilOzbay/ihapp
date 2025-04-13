@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import boyAvatar from "../assets/images/boy_3984629.png";
 import girlAvatar from "../assets/images/girl_3984664.png";
-
+import { API_BASE_URL } from "./env-config";
 const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
   const [portfolioName, setPortfolioName] = useState(portfolio?.name || "");
   const [selectedAvatar, setSelectedAvatar] = useState(portfolio?.avatar || boyAvatar);
@@ -31,8 +31,8 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
 
     setLoading(true);
     const endpoint = portfolio
-      ? `http://localhost:5000/portfolio/${portfolio._id}`
-      : "http://localhost:5000/create-portfolio";
+      ? `http://${API_BASE_URL}/portfolio/${portfolio._id}`
+      : 'http://${API_BASE_URL}/create-portfolio';
 
     const method = portfolio ? "PUT" : "POST";
 
@@ -64,7 +64,7 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
 
   const addTransaction = async (transaction) => {
     try {
-      const response = await fetch(`http://localhost:5000/portfolio/${portfolio._id}/transaction`, {
+      const response = await fetch(`http://${API_BASE_URL}/portfolio/${portfolio._id}/transaction`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(transaction),
@@ -84,7 +84,7 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
   const deleteTransaction = async (transactionId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/portfolio/${portfolio._id}/transaction/${transactionId}`,
+        `http://${API_BASE_URL}/portfolio/${portfolio._id}/transaction/${transactionId}`,
         {
           method: "DELETE",
         }
@@ -105,7 +105,7 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
   const handleEditSubmit = async (editedTransaction) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/portfolio/${portfolio._id}/transaction/${editedTransaction._id}`,
+        `http://${API_BASE_URL}/portfolio/${portfolio._id}/transaction/${editedTransaction._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

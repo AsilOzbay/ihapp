@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-
+import { API_BASE_URL } from "./env-config";
 const TopGainers = () => {
   const [timeframe, setTimeframe] = useState("daily");
   const [gainersData, setGainersData] = useState([]);
@@ -10,7 +10,7 @@ const TopGainers = () => {
   const fetchGainers = async (tf) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/gainers?timeframe=${tf}`);
+      const response = await fetch(`http://${API_BASE_URL}/gainers?timeframe=${tf}`);
       const result = await response.json();
       setGainersData(result.data);
     } catch (error) {

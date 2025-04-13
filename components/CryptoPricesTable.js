@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "./env-config";
 import {
   View,
   Text,
@@ -27,7 +28,7 @@ const CryptoPricesTable = () => {
   useEffect(() => {
     const fetchCryptoData = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/crypto-data?timeframe=${filters.timeframe}`);
+        const response = await fetch(`http://${API_BASE_URL}/crypto-data?timeframe=${filters.timeframe}`);
         const result = await response.json();
         setCryptoData(result.data);
         setLoading(false);

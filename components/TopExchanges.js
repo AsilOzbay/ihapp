@@ -10,7 +10,7 @@ const TopLosers = () => {
   const fetchLosers = async (tf) => {
     try {
       setLoading(true);
-      const response = await fetch(`https://your-api.com/losers?timeframe=${tf}`);
+      const response = await fetch(`http://localhost:5000/losers?timeframe=${tf}`);
       const result = await response.json();
       setLosersData(result.data);
     } catch (error) {

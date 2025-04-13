@@ -19,7 +19,7 @@ const FibonacciGraph = ({ cryptoSymbol }) => {
     const fetchFibonacciData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://your-api.com/api/fibonacci/${cryptoSymbol}/${timeframe}`);
+        const response = await fetch(`http://localhost:5000/api/fibonacci/${cryptoSymbol}/${timeframe}`);
         if (!response.ok) {
           throw new Error("Failed to fetch Fibonacci data from backend.");
         }

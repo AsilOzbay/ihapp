@@ -27,7 +27,7 @@ const CryptoPricesTable = () => {
   useEffect(() => {
     const fetchCryptoData = async () => {
       try {
-        const response = await fetch(`https://your-api.com/crypto-data?timeframe=${filters.timeframe}`);
+        const response = await fetch(`http://localhost:5000/crypto-data?timeframe=${filters.timeframe}`);
         const result = await response.json();
         setCryptoData(result.data);
         setLoading(false);

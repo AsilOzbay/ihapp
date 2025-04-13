@@ -25,7 +25,7 @@ const TradePage = ({ crypto, onBack }) => {
     const fetchPortfolios = async () => {
       try {
         const userId = JSON.parse(localStorage.getItem("user")).id;
-        const response = await fetch(`https://your-api.com/portfolios?userId=${userId}`);
+        const response = await fetch(`http://localhost:5000/portfolios?userId=${userId}`);
         const data = await response.json();
         setPortfolios(data);
       } catch (error) {
@@ -39,7 +39,7 @@ const TradePage = ({ crypto, onBack }) => {
   useEffect(() => {
     const fetchGraphData = async () => {
       try {
-        const response = await fetch(`https://your-api.com/graph-data/${crypto.symbol}?timeframe=${timeframe}`);
+        const response = await fetch(`http://localhost:5000/graph-data/${crypto.symbol}?timeframe=${timeframe}`);
         const data = await response.json();
 
         setChartData({
@@ -72,7 +72,7 @@ const TradePage = ({ crypto, onBack }) => {
 
     const total = (quantity * price).toFixed(2);
     try {
-      const response = await fetch(`https://your-api.com/portfolio/${selectedPortfolioId}/transaction`, {
+      const response = await fetch(`http://localhost:5000/portfolio/${selectedPortfolioId}/transaction`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

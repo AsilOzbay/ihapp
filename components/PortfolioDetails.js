@@ -21,7 +21,7 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
   useEffect(() => {
     const fetchPortfolioDetails = async () => {
       try {
-        const response = await fetch(`https://your-api.com/portfolio/${portfolioId}`);
+        const response = await fetch(`http://localhost:5000/portfolio/${portfolioId}`);
         if (!response.ok) throw new Error("Failed to fetch portfolio details");
         const data = await response.json();
         setPortfolio(data);
@@ -50,7 +50,7 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
         }));
 
         // Fetch current prices
-        const pricesResponse = await fetch(`https://your-api.com/crypto-data`);
+        const pricesResponse = await fetch(`http://localhost:5000/crypto-data`);
         const pricesData = await pricesResponse.json();
         const updatedHoldings = holdingsArray.map((holding) => {
           const currentPrice = pricesData.data.find(

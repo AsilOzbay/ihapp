@@ -23,8 +23,8 @@ const RightSidebar = () => {
       setLoading(true);
       setError(null);
 
-      const cryptoPanicEndpoint = "https://your-api.com/crypto-news";
-      const geminiEndpoint = "https://your-api.com/geminicrypto-news?lang=en";
+      const cryptoPanicEndpoint = "http://localhost:5000/crypto-news";
+      const geminiEndpoint = "http://localhost:5000/geminicrypto-news?lang=en";
 
       const [cryptoPanicResponse, geminiResponse] = await Promise.all([
         axios.get(cryptoPanicEndpoint),

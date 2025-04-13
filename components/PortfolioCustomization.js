@@ -32,8 +32,8 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
 
     setLoading(true);
     const endpoint = portfolio
-      ? `https://your-api.com/portfolio/${portfolio._id}`
-      : "https://your-api.com/create-portfolio";
+      ? `http://localhost:5000/portfolio/${portfolio._id}`
+      : "http://localhost:5000/create-portfolio";
     const method = portfolio ? "PUT" : "POST";
 
     try {

@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Modal,
+  Pressable,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { useColorScheme } from "react-native";
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
-    // AsyncStorage'dan kullanıcı bilgilerini al
     const fetchUser = async () => {
       const storedUser = await AsyncStorage.getItem("user");
       if (storedUser) {
@@ -22,7 +32,13 @@ export default function Navbar() {
     await AsyncStorage.removeItem("token");
     await AsyncStorage.removeItem("user");
     setUser(null);
-    navigation.navigate("AuthScreen"); // Çıkış sonrası login ekranına yönlendir
+    navigation.navigate("AuthScreen");
+  };
+
+  const toggleTheme = (theme) => {
+    if (theme !== "light" && theme !== "dark") return; // Güvenlik için kontrol
+    AsyncStorage.setItem("theme", theme);
+    setModalVisible(false);
   };
 
   return (
@@ -58,7 +74,37 @@ export default function Navbar() {
             <Text style={styles.link}>Login/Register</Text>
           </TouchableOpacity>
         )}
+
+        {/* ⚙️ Ayarlar Butonu */}
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <Text style={styles.settingsIcon}>⚙️</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Modal: Tema Seçimi */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+          <View style={styles.modalBox}>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => toggleTheme("light")}
+            >
+              <Text style={styles.modalText}>☀️ Light Mode</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => toggleTheme("dark")}
+            >
+              <Text style={styles.modalText}>🌙 Dark Mode</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -92,7 +138,7 @@ const styles = StyleSheet.create({
   link: {
     color: "white",
     fontSize: 16,
-    marginHorizontal: 10,
+    marginHorizontal: 8,
   },
   userContainer: {
     flexDirection: "row",
@@ -106,5 +152,30 @@ const styles = StyleSheet.create({
   logout: {
     color: "red",
     fontSize: 16,
+  },
+  settingsIcon: {
+    fontSize: 20,
+    marginLeft: 12,
+    color: "white",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBox: {
+    backgroundColor: "white",
+    padding: 16,
+    borderRadius: 8,
+    width: 200,
+    elevation: 5,
+  },
+  modalButton: {
+    paddingVertical: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: "center",
   },
 });

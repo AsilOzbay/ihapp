@@ -9,6 +9,7 @@ export default function LearningHubScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Başlık */}
         <View style={styles.header}>
           <Text style={styles.title}>Welcome to the Learning Hub</Text>
           <Text style={styles.subtitle}>
@@ -21,10 +22,12 @@ export default function LearningHubScreen() {
           <VideoSection />
         </View>
 
-        {/* Quiz, Bilgi ve Grafik Bölümü */}
+        {/* Quiz, Info, Chart bölümleri */}
         <View style={styles.section}>
           <QuizSection />
+          <View style={styles.spacer} />
           <InfoSection />
+          <View style={styles.spacer} />
           <ChartQuizSection />
         </View>
       </ScrollView>
@@ -35,8 +38,26 @@ export default function LearningHubScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f3f4f6" },
   scrollContainer: { padding: 16, alignItems: "center" },
-  header: { alignItems: "center", marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: "bold", color: "#1E40AF", textAlign: "center" },
-  subtitle: { fontSize: 14, color: "#4B5563", textAlign: "center", marginTop: 8 },
-  section: { width: "100%", maxWidth: 800, marginBottom: 20 },
+  header: { alignItems: "center", marginBottom: 24 },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#1E40AF",
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#4B5563",
+    textAlign: "center",
+    marginTop: 8,
+    maxWidth: 600,
+  },
+  section: {
+    width: "100%",
+    maxWidth: 800,
+    marginBottom: 24,
+  },
+  spacer: {
+    height: 20,
+  },
 });

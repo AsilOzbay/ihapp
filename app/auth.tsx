@@ -1,9 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useRouter } from "expo-router";
 import { API_BASE_URL } from "./env-config";
+import { useAuth } from "../context/AuthContext";
+
 export default function AuthScreen() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
@@ -13,16 +25,32 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
-  const [step, setStep] = useState("register"); // "register" or "verify"
+  const [step, setStep] = useState("register");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const resetFields = () => {
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setVerificationCode("");
+  };
 
   const handleRegister = async () => {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
       return;
     }
 
+    setLoading(true);
     try {
-      await axios.post('http://${API_BASE_URL}/register', {
+      await axios.post(`http://${API_BASE_URL}/register`, {
         firstName,
         lastName,
         email,
@@ -32,36 +60,56 @@ export default function AuthScreen() {
       setStep("verify");
     } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleVerifyEmail = async () => {
+    if (!email || !verificationCode) {
+      Alert.alert("Error", "Please enter your email and verification code.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await axios.post('http://${API_BASE_URL}/verify', { email, verificationCode });
+      const res = await axios.post(`http://${API_BASE_URL}/verify`, { email, verificationCode });
       Alert.alert("Success", res.data.message);
       setIsLogin(true);
       setStep("register");
+      resetFields();
     } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Verification failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Email and password are required.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await axios.post('http://${API_BASE_URL}/login', { email, password });
+      const res = await axios.post(`http://${API_BASE_URL}/login`, { email, password });
       await AsyncStorage.setItem("token", res.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
+      await login(res.data.user, res.data.token);
       Alert.alert("Success", `Welcome, ${res.data.user.firstName} ${res.data.user.lastName}`);
-      router.push("/home"); // login sonrası home ekranına yönlendirme
+      resetFields();
+      router.replace("/home");
     } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
       <View style={styles.authBox}>
-        {/* Tablar */}
         <View style={styles.tabs}>
           <TouchableOpacity onPress={() => setIsLogin(true)} style={isLogin ? styles.activeTab : styles.inactiveTab}>
             <Text style={styles.tabText}>Log In</Text>
@@ -71,8 +119,9 @@ export default function AuthScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Login / Register / Verify Alanları */}
-        {isLogin ? (
+        {loading ? (
+          <ActivityIndicator size="large" color="#007bff" />
+        ) : isLogin ? (
           <>
             <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
             <TextInput placeholder="Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />

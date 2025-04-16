@@ -1,3 +1,19 @@
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  StyleSheet,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import PortfolioCustomization from "../components/PortfolioCustomization";
+import PortfolioDetails from "../components/PortfolioDetails";
+import { API_BASE_URL } from "./env-config";
+
+// Type tanımları
 type Transaction = {
   symbol: string;
   action: "buy" | "sell";
@@ -21,20 +37,15 @@ type User = {
   email: string;
 };
 
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import PortfolioCustomization from "../components/PortfolioCustomization";
-import PortfolioDetails from "../components/PortfolioDetails";
-import { API_BASE_URL } from "./env-config";
 export default function PortfolioScreen() {
+  const router = useRouter();
+
   const [isDetailsVisible, setDetailsVisible] = useState(false);
   const [isCustomizationVisible, setCustomizationVisible] = useState(false);
   const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null);
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [user, setUser] = useState<User | null>(null);
 
-  // Fetch portfolios
   useEffect(() => {
     const fetchPortfolios = async () => {
       try {
@@ -45,6 +56,8 @@ export default function PortfolioScreen() {
           const response = await fetch(`http://${API_BASE_URL}/portfolios?userId=${userData.id}`);
           const data = await response.json();
           setPortfolios(data);
+        } else {
+          router.replace("/auth");
         }
       } catch (error) {
         console.error("Error fetching portfolios:", error);
@@ -64,6 +77,14 @@ export default function PortfolioScreen() {
     }
   };
 
+  const handleCreatePortfolio = () => {
+    if (user) {
+      setCustomizationVisible(true);
+    } else {
+      router.replace("/auth");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -76,7 +97,7 @@ export default function PortfolioScreen() {
 
             <TouchableOpacity
               style={styles.createButton}
-              onPress={() => setCustomizationVisible(true)}
+              onPress={handleCreatePortfolio}
             >
               <Text style={styles.createButtonText}>Create New Portfolio</Text>
             </TouchableOpacity>
@@ -144,11 +165,36 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f3f4f6" },
   scrollContainer: { padding: 16 },
   centeredContainer: { alignItems: "center", justifyContent: "center" },
-  heading: { fontSize: 24, fontWeight: "bold", color: "#1E40AF", textAlign: "center", marginBottom: 10 },
-  subtitle: { fontSize: 14, color: "#4B5563", textAlign: "center", marginBottom: 16 },
-  createButton: { backgroundColor: "#2563EB", padding: 12, borderRadius: 8, marginBottom: 16 },
-  createButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 8, color: "#374151" },
+  heading: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1E40AF",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#4B5563",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  createButton: {
+    backgroundColor: "#2563EB",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  createButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#374151",
+  },
   portfolioList: { width: "100%", marginTop: 16 },
   portfolioCard: {
     backgroundColor: "white",
@@ -170,4 +216,3 @@ const styles = StyleSheet.create({
   viewButton: { backgroundColor: "#10b981", padding: 8, borderRadius: 6 },
   buttonText: { color: "white", fontWeight: "bold" },
 });
-

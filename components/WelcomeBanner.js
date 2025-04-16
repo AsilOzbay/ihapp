@@ -1,24 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "../context/AuthContext"; // ✅ doğru path'e göre güncelle
 
 const WelcomeBanner = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const storedUser = await AsyncStorage.getItem("user");
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        }
-      } catch (error) {
-        console.error("Error fetching user from storage:", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const { user } = useAuth(); // ✅ context'ten kullanıcıyı al
 
   return (
     <View style={styles.banner}>
@@ -30,8 +15,17 @@ const WelcomeBanner = () => {
 };
 
 const styles = StyleSheet.create({
-  banner: { width: "100%", backgroundColor: "#007bff", padding: 15, alignItems: "center" },
-  text: { color: "white", fontSize: 20, fontWeight: "bold" },
+  banner: {
+    width: "100%",
+    backgroundColor: "#007bff",
+    padding: 15,
+    alignItems: "center",
+  },
+  text: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
 });
 
 export default WelcomeBanner;

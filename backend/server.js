@@ -631,8 +631,32 @@ setInterval(async () => {
       res.status(500).json({ message: 'Error adding transaction', error: error.message });
     }
   });
-  
 
+  // ✅ Eksik olan endpoint: portfolio güncelleme
+app.put('/portfolio/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, avatar } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Name is required' });
+  }
+
+  try {
+    const updated = await Portfolio.findByIdAndUpdate(
+      id,
+      { name, avatar },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+
+    res.status(200).json({ message: 'Portfolio updated successfully', portfolio: updated });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating portfolio', error: error.message });
+  }
+});
 
   app.put('/portfolio/:portfolioId/transaction/:transactionId', async (req, res) => {
     const { portfolioId, transactionId } = req.params;

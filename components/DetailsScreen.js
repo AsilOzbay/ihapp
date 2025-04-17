@@ -25,7 +25,7 @@ const DetailsScreen = ({ crypto, onBack, onTrade }) => {
         const data = await response.json();
 
         setChartData({
-          labels: data.map((point) => point.time),
+          labels: Array(data.length).fill(""), // 🧹 X eksenindeki tarihleri kaldır
           datasets: [{ data: data.map((point) => point.price) }],
         });
       } catch (error) {
@@ -55,22 +55,27 @@ const DetailsScreen = ({ crypto, onBack, onTrade }) => {
           <ActivityIndicator size="large" color="#007bff" />
         ) : chartData ? (
           <LineChart
-            data={chartData}
-            width={Dimensions.get("window").width - 30}
-            height={220}
-            fromZero
-            verticalLabelRotation={90} // Dikey X ekseni etiketleri
-            chartConfig={{
-              backgroundGradientFrom: "#ffffff",
-              backgroundGradientTo: "#ffffff",
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
-              labelColor: () => "#555",
-              propsForDots: { r: "3", strokeWidth: "1", stroke: "#007bff" },
-              propsForLabels: { fontSize: 10 },
-            }}
-            style={{ borderRadius: 8, marginVertical: 8 }}
-          />
+  data={chartData}
+  width={Dimensions.get("window").width - 40} // 🔁 Genişliği biraz küçülttük
+  height={220}
+  fromZero
+  withHorizontalLabels={true}
+  withVerticalLabels={true}
+  chartConfig={{
+    backgroundGradientFrom: "#ffffff",
+    backgroundGradientTo: "#ffffff",
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
+    labelColor: () => "#555",
+    propsForDots: { r: "3", strokeWidth: "1", stroke: "#007bff" },
+    propsForLabels: { fontSize: 10 },
+  }}
+  style={{ borderRadius: 8 }}
+  withInnerLines={true}
+  withOuterLines={false}
+  verticalLabelRotation={0}
+/>
+
         ) : (
           <Text style={styles.chartError}>Chart data not available.</Text>
         )}
@@ -99,45 +104,109 @@ const DetailsScreen = ({ crypto, onBack, onTrade }) => {
         <Text style={styles.value}>${crypto.mktCap?.toLocaleString()}</Text>
       </View>
 
-      {/* 🚀 Trade Butonu */}
-      <TouchableOpacity
-  style={styles.tradeButton}
-  onPress={() => onTrade(crypto)}
->
-  <Text style={styles.tradeButtonText}>Trade</Text>
-</TouchableOpacity>
+      {/* 🚀 Trade Button */}
+      <TouchableOpacity style={styles.tradeButton} onPress={() => onTrade(crypto)}>
+        <Text style={styles.tradeButtonText}>Trade</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: "#fff" },
-  backButton: { marginBottom: 15 },
-  backButtonText: { color: "#007bff", fontSize: 16 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
-
-  chartContainer: { marginBottom: 20, alignItems: "center" },
-  chartLabel: { fontSize: 16, fontWeight: "bold", marginBottom: 10, textAlign: "center" },
-  chartError: { fontSize: 14, color: "#888", textAlign: "center", marginTop: 10 },
-
-  detailBox: { backgroundColor: "#f9f9f9", padding: 15, borderRadius: 8 },
-  label: { fontSize: 14, fontWeight: "600", marginTop: 10 },
-  value: { fontSize: 16, marginTop: 4 },
-  green: { color: "green" },
-  red: { color: "red" },
-
-  tradeButton: {
-    marginTop: 20,
-    backgroundColor: "#28a745",
-    padding: 12,
-    borderRadius: 5,
-    alignItems: "center",
+  container: {
+    padding: 20,
+    backgroundColor: "#f8fafc",
   },
-  tradeButtonText: {
-    color: "#fff",
+  backButton: {
+    marginBottom: 15,
+    alignSelf: "flex-start",
+    backgroundColor: "#e2e8f0",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  backButtonText: {
+    color: "#1e40af",
     fontSize: 16,
     fontWeight: "bold",
   },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#0f172a",
+  },
+  chartContainer: {
+    marginBottom: 24,
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    alignItems: "center", // 📌 Grafik ortalansın
+  },
+  chartLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 12,
+    textAlign: "center",
+    color: "#334155",
+  },
+  chartError: {
+    fontSize: 14,
+    color: "#888",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  detailBox: {
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 12,
+    color: "#475569",
+  },
+  value: {
+    fontSize: 16,
+    marginTop: 4,
+    color: "#0f172a",
+  },
+  green: {
+    color: "green",
+  },
+  red: {
+    color: "red",
+  },
+  tradeButton: {
+    marginTop: 24,
+    backgroundColor: "#2563eb",
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tradeButtonText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
 });
+
 
 export default DetailsScreen;

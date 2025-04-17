@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
-import { API_BASE_URL } from "./env-config";
+
+const screenWidth = Dimensions.get("window").width;
+
 const ChartQuizSection = () => {
   const graphs = [
     {
@@ -49,6 +51,48 @@ const ChartQuizSection = () => {
         ],
         correct: 0,
       },
+      {
+        question: "Which day had the largest price increase in Bitcoin chart?",
+        options: ["Day 4", "Day 7", "Day 2", "Day 8"],
+        correct: 0,
+      },
+      {
+        question: "What is the overall trend of Bitcoin chart?",
+        options: ["Uptrend", "Downtrend", "Flat", "Volatile"],
+        correct: 0,
+      },
+    ],
+    [
+      {
+        question: "What is the highest price recorded in Ethereum chart?",
+        options: [
+          `Day 1: $${currentGraph.data[0]}`,
+          `Day 5: $${currentGraph.data[4]}`,
+          `Day ${maxPriceIndex + 1}: $${maxPrice}`,
+          `Day 8: $${currentGraph.data[7]}`,
+        ],
+        correct: 2,
+      },
+      {
+        question: "What is the lowest price recorded in Ethereum chart?",
+        options: [
+          `Day ${minPriceIndex + 1}: $${minPrice}`,
+          `Day 6: $${currentGraph.data[5]}`,
+          `Day 3: $${currentGraph.data[2]}`,
+          `Day 9: $${currentGraph.data[8]}`,
+        ],
+        correct: 0,
+      },
+      {
+        question: "Which day had the largest price increase in Ethereum chart?",
+        options: ["Day 4", "Day 7", "Day 2", "Day 8"],
+        correct: 0,
+      },
+      {
+        question: "What is the overall trend of Ethereum chart?",
+        options: ["Uptrend", "Downtrend", "Flat", "Volatile"],
+        correct: 0,
+      },
     ],
   ];
 
@@ -58,13 +102,13 @@ const ChartQuizSection = () => {
   };
 
   const goToNextQuestion = () => {
-    setCurrentQuestionIndex((prevIndex) => Math.min(prevIndex + 1, questions[selectedGraphIndex].length - 1));
+    setCurrentQuestionIndex((prev) => Math.min(prev + 1, questions[selectedGraphIndex].length - 1));
     setSelectedOption(null);
     setIsAnswered(false);
   };
 
   const goToPreviousQuestion = () => {
-    setCurrentQuestionIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+    setCurrentQuestionIndex((prev) => Math.max(prev - 1, 0));
     setSelectedOption(null);
     setIsAnswered(false);
   };
@@ -77,7 +121,7 @@ const ChartQuizSection = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Interactive Coin Price Charts</Text>
 
       <View style={styles.graphSelection}>
@@ -85,10 +129,7 @@ const ChartQuizSection = () => {
           <TouchableOpacity
             key={index}
             onPress={() => switchGraph(index)}
-            style={[
-              styles.graphButton,
-              selectedGraphIndex === index && styles.selectedGraphButton,
-            ]}
+            style={[styles.graphButton, selectedGraphIndex === index && styles.selectedGraphButton]}
           >
             <Text style={styles.graphButtonText}>{graph.title}</Text>
           </TouchableOpacity>
@@ -99,24 +140,19 @@ const ChartQuizSection = () => {
         <LineChart
           data={{
             labels: currentGraph.labels,
-            datasets: [
-              {
-                data: currentGraph.data,
-                color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                strokeWidth: 2,
-              },
-            ],
+            datasets: [{ data: currentGraph.data }],
           }}
-          width={350}
+          width={screenWidth - 40}
           height={250}
           chartConfig={{
-            backgroundColor: "#fff",
             backgroundGradientFrom: "#f3f3f3",
             backgroundGradientTo: "#fff",
-            decimalPlaces: 2,
-            color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+            labelColor: () => "#000",
+            style: { borderRadius: 16 },
           }}
+          bezier
         />
       </View>
 
@@ -147,40 +183,47 @@ const ChartQuizSection = () => {
           <TouchableOpacity
             onPress={goToPreviousQuestion}
             disabled={currentQuestionIndex === 0}
-            style={styles.navButton}
+            style={[
+              styles.navButton,
+              currentQuestionIndex === 0 && styles.disabledNavButton,
+            ]}
           >
             <Text style={styles.navButtonText}>Previous</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={goToNextQuestion}
             disabled={currentQuestionIndex === questions[selectedGraphIndex].length - 1}
-            style={styles.navButton}
+            style={[
+              styles.navButton,
+              currentQuestionIndex === questions[selectedGraphIndex].length - 1 && styles.disabledNavButton,
+            ]}
           >
             <Text style={styles.navButtonText}>Next</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 15, backgroundColor: "#fff" },
+  container: { padding: 20, backgroundColor: "#fff" },
   title: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 10 },
-  graphSelection: { flexDirection: "row", justifyContent: "center", marginBottom: 10 },
-  graphButton: { padding: 10, margin: 5, backgroundColor: "#ccc", borderRadius: 5 },
+  graphSelection: { flexDirection: "row", justifyContent: "center", flexWrap: "wrap", marginBottom: 15 },
+  graphButton: { padding: 10, margin: 5, backgroundColor: "#ccc", borderRadius: 8 },
   selectedGraphButton: { backgroundColor: "#4caf50" },
   graphButtonText: { color: "#fff", fontSize: 16 },
   chartContainer: { alignItems: "center", marginBottom: 20 },
-  questionContainer: { padding: 10, backgroundColor: "#f9f9f9", borderRadius: 5 },
+  questionContainer: { padding: 15, backgroundColor: "#f9f9f9", borderRadius: 10 },
   questionText: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  optionButton: { padding: 10, borderRadius: 5, marginBottom: 5 },
-  correctOption: { backgroundColor: "green" },
-  wrongOption: { backgroundColor: "red" },
+  optionButton: { padding: 10, borderRadius: 8, marginBottom: 8 },
+  correctOption: { backgroundColor: "#4caf50" },
+  wrongOption: { backgroundColor: "#e53935" },
   defaultOption: { backgroundColor: "#ddd" },
   optionText: { fontSize: 16, color: "white" },
-  navigationButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
-  navButton: { padding: 10, backgroundColor: "#007bff", borderRadius: 5 },
+  navigationButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 15 },
+  navButton: { padding: 10, backgroundColor: "#2196f3", borderRadius: 8 },
+  disabledNavButton: { backgroundColor: "#aaa" },
   navButtonText: { color: "white", fontSize: 16 },
 });
 

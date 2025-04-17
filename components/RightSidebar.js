@@ -1,130 +1,178 @@
 import React, { useState, useEffect } from "react";
-import { API_BASE_URL } from "./env-config";
 import {
   View,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
   ScrollView,
   Linking,
+  StyleSheet,
+  Modal,
 } from "react-native";
 import axios from "axios";
+import { API_BASE_URL } from "./env-config";
 
 const RightSidebar = () => {
+  const [visible, setVisible] = useState(false);
   const [newsType, setNewsType] = useState("cryptoPanic");
   const [cryptoPanicNews, setCryptoPanicNews] = useState([]);
   const [dailyAnalysis, setDailyAnalysis] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  const fetchAllNews = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const cryptoPanicEndpoint = `http://${API_BASE_URL}/crypto-news`;
-      const geminiEndpoint = `http://${API_BASE_URL}/geminicrypto-news?lang=en`;
-
-      const [cryptoPanicResponse, geminiResponse] = await Promise.all([
-        axios.get(cryptoPanicEndpoint),
-        axios.get(geminiEndpoint),
-      ]);
-
-      setCryptoPanicNews(cryptoPanicResponse.data.news || []);
-      setDailyAnalysis(geminiResponse.data.news || "No analysis available.");
-      setLastUpdated(
-        geminiResponse.data.lastUpdated
-          ? new Date(geminiResponse.data.lastUpdated).toLocaleString()
-          : "N/A"
-      );
-    } catch (err) {
-      console.error("Error fetching news:", err);
-      setError("Failed to load news. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const togglePanel = () => setVisible(!visible);
 
   useEffect(() => {
+    const fetchAllNews = async () => {
+      try {
+        const [cryptoPanicRes, geminiRes] = await Promise.all([
+          axios.get(`http://${API_BASE_URL}/crypto-news`),
+          axios.get(`http://${API_BASE_URL}/geminicrypto-news?lang=en`),
+        ]);
+
+        setCryptoPanicNews(cryptoPanicRes.data.news || []);
+        setDailyAnalysis(geminiRes.data.news || "No analysis available.");
+        setLastUpdated(
+          geminiRes.data.lastUpdated
+            ? new Date(geminiRes.data.lastUpdated).toLocaleString()
+            : "N/A"
+        );
+      } catch (err) {
+        console.error("Error fetching news:", err);
+      }
+    };
+
     fetchAllNews();
   }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>📢 Crypto News</Text>
+    <>
+      {/* News toggle button */}
+      <TouchableOpacity style={styles.newsButton} onPress={togglePanel}>
+        <Text style={styles.newsButtonText}>📰</Text>
+      </TouchableOpacity>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          onPress={() => setNewsType("cryptoPanic")}
-          style={[styles.button, newsType === "cryptoPanic" && styles.activeButton]}
-        >
-          <Text style={[styles.buttonText, newsType === "cryptoPanic" && styles.activeButtonText]}>
-            CryptoPanic News
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setNewsType("dailyAnalysis")}
-          style={[styles.button, newsType === "dailyAnalysis" && styles.activeButton]}
-        >
-          <Text style={[styles.buttonText, newsType === "dailyAnalysis" && styles.activeButtonText]}>
-            Daily Analysis
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* News panel modal */}
+      <Modal visible={visible} animationType="slide" transparent onRequestClose={togglePanel}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.panel}>
+            <View style={styles.header}>
+              <Text style={styles.title}>📢 Crypto News</Text>
+              <TouchableOpacity onPress={togglePanel}>
+                <Text style={styles.close}>✖</Text>
+              </TouchableOpacity>
+            </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : (
-        <View style={{ width: "100%" }}>
-          {newsType === "cryptoPanic" ? (
-            <>
-              {cryptoPanicNews.length === 0 ? (
-                <Text style={styles.emptyText}>No CryptoPanic news available.</Text>
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                style={[styles.tabButton, newsType === "cryptoPanic" && styles.activeTab]}
+                onPress={() => setNewsType("cryptoPanic")}
+              >
+                <Text style={newsType === "cryptoPanic" ? styles.activeText : styles.tabText}>
+                  CryptoPanic News
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tabButton, newsType === "dailyAnalysis" && styles.activeTab]}
+                onPress={() => setNewsType("dailyAnalysis")}
+              >
+                <Text style={newsType === "dailyAnalysis" ? styles.activeText : styles.tabText}>
+                  Daily Analysis
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.content}>
+              {newsType === "cryptoPanic" ? (
+                cryptoPanicNews.length > 0 ? (
+                  cryptoPanicNews.map((item, index) => (
+                    <TouchableOpacity key={index} onPress={() => Linking.openURL(item.url)}>
+                      <Text style={styles.newsItem}>{item.title}</Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Text>No news available.</Text>
+                )
               ) : (
-                cryptoPanicNews.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.newsItem}
-                    onPress={() => Linking.openURL(item.url)}
-                  >
-                    <Text style={styles.newsText}>{item.title}</Text>
-                  </TouchableOpacity>
-                ))
+                <Text>{dailyAnalysis}</Text>
               )}
-            </>
-          ) : (
-            <Text style={styles.analysisText}>{dailyAnalysis}</Text>
-          )}
-          <Text style={styles.lastUpdated}>🕒 Last updated: {lastUpdated}</Text>
+              <Text style={styles.timestamp}>Last updated: {lastUpdated}</Text>
+            </ScrollView>
+          </View>
         </View>
-      )}
-    </ScrollView>
+      </Modal>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 15, backgroundColor: "#f9f9f9", alignItems: "center" },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 10, color: "#333" },
-  buttonContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 10 },
-  button: { padding: 10, backgroundColor: "#ddd", borderRadius: 5, marginHorizontal: 5 },
-  activeButton: { backgroundColor: "#007bff" },
-  buttonText: { fontSize: 16, color: "#333" },
-  activeButtonText: { color: "white" },
-  newsItem: {
+  newsButton: {
+    backgroundColor: "#2563eb",
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    width: "100%",
+    borderRadius: 30,
   },
-  newsText: { fontSize: 16, color: "#007bff" },
-  analysisText: { fontSize: 16, color: "#222", padding: 10 },
-  lastUpdated: { fontSize: 14, color: "#888", marginTop: 10 },
-  errorText: { fontSize: 16, color: "red", marginTop: 10 },
-  emptyText: { fontSize: 16, color: "#555", textAlign: "center", marginTop: 10 },
+  newsButtonText: {
+    fontSize: 20,
+    color: "white",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  panel: {
+    backgroundColor: "white",
+    height: "80%",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  close: {
+    fontSize: 20,
+    color: "#ef4444",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  tabs: {
+    flexDirection: "row",
+    marginVertical: 10,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderRadius: 6,
+    backgroundColor: "#e5e7eb",
+    marginRight: 8,
+  },
+  activeTab: {
+    backgroundColor: "#2563eb",
+  },
+  tabText: {
+    color: "#374151",
+  },
+  activeText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  content: {
+    marginTop: 10,
+  },
+  newsItem: {
+    color: "#2563eb",
+    marginBottom: 12,
+    fontSize: 14,
+  },
+  timestamp: {
+    marginTop: 20,
+    fontSize: 12,
+    color: "#9ca3af",
+  },
 });
 
 export default RightSidebar;

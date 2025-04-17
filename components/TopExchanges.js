@@ -28,7 +28,7 @@ const TopLosers = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Top 5 {timeframe} Losers</Text>
+      <Text style={styles.header}>Top 5 {timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Losers</Text>
 
       <Picker
         selectedValue={timeframe}

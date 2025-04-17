@@ -13,7 +13,6 @@ import PortfolioCustomization from "../components/PortfolioCustomization";
 import PortfolioDetails from "../components/PortfolioDetails";
 import { API_BASE_URL } from "./env-config";
 
-// Type tanımları
 type Transaction = {
   symbol: string;
   action: "buy" | "sell";
@@ -78,6 +77,7 @@ export default function PortfolioScreen() {
   };
 
   const handleCreatePortfolio = () => {
+    setSelectedPortfolio(null); // ✅ EKLENDİ
     if (user) {
       setCustomizationVisible(true);
     } else {
@@ -87,8 +87,8 @@ export default function PortfolioScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {!isCustomizationVisible && !isDetailsVisible ? (
+      {!isCustomizationVisible && !isDetailsVisible ? (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.centeredContainer}>
             <Text style={styles.heading}>Crypto Portfolio Tracker</Text>
             <Text style={styles.subtitle}>
@@ -138,25 +138,25 @@ export default function PortfolioScreen() {
               </View>
             )}
           </View>
-        ) : isCustomizationVisible ? (
-          <PortfolioCustomization
-            portfolio={selectedPortfolio}
-            userId={user?.id}
-            onBack={() => {
-              setCustomizationVisible(false);
-              reloadPortfolios();
-            }}
-          />
-        ) : (
-          <PortfolioDetails
-            portfolioId={selectedPortfolio?._id}
-            onBack={() => {
-              setDetailsVisible(false);
-              reloadPortfolios();
-            }}
-          />
-        )}
-      </ScrollView>
+        </ScrollView>
+      ) : isCustomizationVisible ? (
+        <PortfolioCustomization
+          portfolio={selectedPortfolio}
+          userId={user?.id}
+          onBack={() => {
+            setCustomizationVisible(false);
+            reloadPortfolios();
+          }}
+        />
+      ) : (
+        <PortfolioDetails
+          portfolioId={selectedPortfolio?._id}
+          onBack={() => {
+            setDetailsVisible(false);
+            reloadPortfolios();
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }

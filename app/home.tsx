@@ -38,6 +38,11 @@ export default function HomeScreen() {
         </TouchableOpacity>
       )}
 
+      {/* Sağ üst köşeye 📰 butonu */}
+      <View style={styles.newsButtonWrapper}>
+        <RightSidebar />
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <WelcomeBanner />
         <Text style={styles.heading}>Crypto Dashboard</Text>
@@ -51,10 +56,6 @@ export default function HomeScreen() {
         </View>
 
         <CryptoPricesTable />
-
-        <View style={styles.sidebar}>
-          <RightSidebar />
-        </View>
       </ScrollView>
 
       {/* Menü (Modal) */}
@@ -93,16 +94,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   row: { flexDirection: "column", gap: 16 },
-  sidebar: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "white",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
   settingsIcon: {
     position: "absolute",
     top: 16,
@@ -133,5 +124,12 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  newsButtonWrapper: {
+    position: "absolute",
+    top: 56, // settingsIcon'un altına gelsin
+    right: 15, // ayarla hizalı kalsın
+    zIndex: 10,
+    transform: [{ scale: 0.8 }], // boyutu küçült
   },
 });

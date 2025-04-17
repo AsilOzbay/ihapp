@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { API_BASE_URL } from "./env-config";
 import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
   StyleSheet,
   Image,
+  FlatList,
+  Dimensions,
 } from "react-native";
-
 import { LineChart, PieChart } from "react-native-chart-kit";
+import boyAvatar from "../assets/images/boy_3984629.png";
+import girlAvatar from "../assets/images/girl_3984664.png";
+import { API_BASE_URL } from "./env-config";
 
 const PortfolioDetails = ({ portfolioId, onBack }) => {
   const [portfolio, setPortfolio] = useState(null);
@@ -22,55 +24,40 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
   useEffect(() => {
     const fetchPortfolioDetails = async () => {
       try {
-        const response = await fetch(`http://${API_BASE_URL}/portfolio/${portfolioId}`);
-        if (!response.ok) throw new Error("Failed to fetch portfolio details");
-        const data = await response.json();
+        const res = await fetch(`http://${API_BASE_URL}/portfolio/${portfolioId}`);
+        if (!res.ok) throw new Error("Failed to fetch portfolio details");
+        const data = await res.json();
         setPortfolio(data);
 
-        // Calculate holdings
-        const calculatedHoldings = {};
-        data.transactions.forEach((transaction) => {
-          const { symbol, action, quantity, price } = transaction;
-          if (!calculatedHoldings[symbol]) {
-            calculatedHoldings[symbol] = { quantity: 0, totalCost: 0 };
-          }
-
-          if (action === "buy") {
-            calculatedHoldings[symbol].quantity += quantity;
-            calculatedHoldings[symbol].totalCost += quantity * price;
-          } else if (action === "sell") {
-            calculatedHoldings[symbol].quantity -= quantity;
-            calculatedHoldings[symbol].totalCost -= quantity * price;
-          }
+        const calculated = {};
+        data.transactions.forEach(({ symbol, action, quantity, price }) => {
+          if (!calculated[symbol]) calculated[symbol] = { quantity: 0, totalCost: 0 };
+          const delta = quantity * price * (action === "buy" ? 1 : -1);
+          calculated[symbol].quantity += quantity * (action === "buy" ? 1 : -1);
+          calculated[symbol].totalCost += delta;
         });
 
-        const holdingsArray = Object.keys(calculatedHoldings).map((symbol) => ({
+        const holdingsArr = Object.entries(calculated).map(([symbol, { quantity, totalCost }]) => ({
           symbol,
-          quantity: calculatedHoldings[symbol].quantity,
-          totalCost: calculatedHoldings[symbol].totalCost,
+          quantity,
+          totalCost,
         }));
 
-        // Fetch current prices
-        const pricesResponse = await fetch(`http://${API_BASE_URL}/crypto-data`);
-        const pricesData = await pricesResponse.json();
-        const updatedHoldings = holdingsArray.map((holding) => {
-          const currentPrice = pricesData.data.find(
-            (crypto) => crypto.symbol === holding.symbol
-          )?.price;
-          const currentValue = holding.quantity * (currentPrice || 0);
-          const profitLoss = currentValue - holding.totalCost;
+        const pricesRes = await fetch(`http://${API_BASE_URL}/crypto-data`);
+        const pricesData = await pricesRes.json();
 
+        const updated = holdingsArr.map((h) => {
+          const currentPrice = pricesData.data.find((c) => c.symbol === h.symbol)?.price || 0;
+          const currentValue = h.quantity * currentPrice;
           return {
-            ...holding,
-            currentPrice: currentPrice || 0,
+            ...h,
+            currentPrice,
             currentValue,
-            profitLoss,
+            profitLoss: currentValue - h.totalCost,
           };
         });
 
-        setHoldings(updatedHoldings);
-
-        // Prepare Total Invested Data
+        setHoldings(updated);
         setTotalInvestedData(prepareTotalInvestedData(data.transactions));
       } catch (err) {
         setError(err.message);
@@ -83,99 +70,228 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
   }, [portfolioId]);
 
   const prepareTotalInvestedData = (transactions) => {
-    const totalInvestedOverTime = [];
-    let runningTotalInvested = 0;
-
-    transactions
+    let runningTotal = 0;
+    return transactions
       .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .forEach((transaction) => {
-        if (transaction.action === "buy") {
-          runningTotalInvested += transaction.quantity * transaction.price;
-        } else if (transaction.action === "sell") {
-          runningTotalInvested -= transaction.quantity * transaction.price;
-        }
-
-        totalInvestedOverTime.push({
-          date: new Date(transaction.date).toISOString().split("T")[0],
-          totalInvested: runningTotalInvested.toFixed(2),
-        });
+      .map((t) => {
+        const delta = t.quantity * t.price * (t.action === "buy" ? 1 : -1);
+        runningTotal += delta;
+        return {
+          date: new Date(t.date).toISOString().split("T")[0],
+          totalInvested: runningTotal.toFixed(2),
+        };
       });
-
-    return totalInvestedOverTime;
   };
 
-  if (isLoading) return <ActivityIndicator size="large" color="#0000ff" />;
+  const getAvatar = (avatar) => (avatar === "girl" ? girlAvatar : boyAvatar);
+  const totalValue = holdings.reduce((acc, h) => acc + h.currentValue, 0);
+  const totalInvested = holdings.reduce((acc, h) => acc + h.totalCost, 0);
+  const totalProfitLoss = totalValue - totalInvested;
+  const profitPercent = totalInvested > 0 ? ((totalProfitLoss / totalInvested) * 100).toFixed(2) : "0.00";
+
+  if (isLoading) return <ActivityIndicator size="large" color="#2563eb" />;
   if (error) return <Text style={styles.errorText}>Error: {error}</Text>;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity onPress={onBack} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
+    <FlatList
+      data={portfolio.transactions}
+      keyExtractor={(item) => item._id}
+      ListHeaderComponent={
+        <>
+          <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
 
-      <View style={styles.card}>
-        <Text style={styles.title}>Portfolio Overview</Text>
-        <Text style={styles.info}>Total Value: ${holdings.reduce((sum, h) => sum + h.currentValue, 0).toFixed(2)}</Text>
-        <Text style={styles.info}>Total Invested: ${holdings.reduce((sum, h) => sum + h.totalCost, 0).toFixed(2)}</Text>
-      </View>
+          <View style={styles.card}>
+            <Text style={styles.title}>Portfolio Overview</Text>
+            <View style={styles.row}>
+              <View style={styles.statBox}>
+                <Text style={styles.label}>Value</Text>
+                <Text
+                  style={styles.value}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  ${totalValue.toLocaleString()}
+                </Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.label}>Invested</Text>
+                <Text
+                  style={styles.value}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  ${totalInvested.toLocaleString()}
+                </Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text
+                  style={[
+                    styles.value,
+                    { color: totalProfitLoss >= 0 ? "green" : "red" },
+                  ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  ${totalProfitLoss.toLocaleString()}
+                </Text>
+                <Text style={styles.label}>P/L</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text
+                  style={[
+                    styles.value,
+                    { color: totalProfitLoss >= 0 ? "green" : "red" },
+                  ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {profitPercent}%
+                </Text>
+                <Text style={styles.label}>P/L %</Text>
+              </View>
+            </View>
+          </View>
 
-      {/* Line Chart */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>Total Invested Over Time</Text>
-        <LineChart
-          data={{
-            labels: totalInvestedData.map((d) => d.date),
-            datasets: [{ data: totalInvestedData.map((d) => parseFloat(d.totalInvested)) }],
-          }}
-          width={350}
-          height={250}
-          chartConfig={{
-            backgroundColor: "#fff",
-            backgroundGradientFrom: "#f3f3f3",
-            backgroundGradientTo: "#fff",
-            decimalPlaces: 2,
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          }}
-        />
-      </View>
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Invested Over Time</Text>
+            <LineChart
+              data={{
+                labels: totalInvestedData.map((d) => d.date),
+                datasets: [
+                  {
+                    data: totalInvestedData.map((d) => parseFloat(d.totalInvested)),
+                  },
+                ],
+              }}
+              width={Dimensions.get("window").width - 32}
+              height={220}
+              yLabelsOffset={15}
+              withInnerLines={false}
+              chartConfig={{
+                backgroundGradientFrom: "#fff",
+                backgroundGradientTo: "#fff",
+                decimalPlaces: 2,
+                color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+                labelColor: () => "#374151",
+                propsForLabels: {
+                  fontSize: 10,
+                },
+              }}
+              style={{ borderRadius: 8 }}
+            />
+          </View>
 
-      {/* Pie Chart */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>Holdings Distribution</Text>
-        <PieChart
-          data={holdings.map((h) => ({
-            name: h.symbol,
-            amount: h.currentValue,
-            color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-            legendFontColor: "#000",
-            legendFontSize: 12,
-          }))}
-          width={350}
-          height={220}
-          chartConfig={{
-            backgroundGradientFrom: "#f3f3f3",
-            backgroundGradientTo: "#fff",
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          }}
-          accessor="amount"
-          backgroundColor="transparent"
-          paddingLeft="15"
-        />
-      </View>
-    </ScrollView>
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Holdings Distribution</Text>
+            <PieChart
+              data={holdings.map((h) => ({
+                name: h.symbol,
+                amount: h.currentValue,
+                color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+                legendFontColor: "#000",
+                legendFontSize: 12,
+              }))}
+              width={Dimensions.get("window").width - 32}
+              height={220}
+              accessor="amount"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              chartConfig={{
+                backgroundGradientFrom: "#fff",
+                backgroundGradientTo: "#fff",
+                color: () => "#000",
+              }}
+            />
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>{portfolio.name}</Text>
+            <Image source={getAvatar(portfolio.avatar)} style={styles.avatar} />
+            <Text style={styles.label}>
+              Created:{" "}
+              {portfolio.createdAt
+                ? new Date(portfolio.createdAt).toLocaleDateString()
+                : "Unknown"}
+            </Text>
+            <Text style={styles.label}>Transactions: {portfolio.transactions.length}</Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Transaction History</Text>
+            <View style={styles.tableHeader}>
+              <Text style={styles.tableCol}>Date</Text>
+              <Text style={styles.tableCol}>Action</Text>
+              <Text style={styles.tableCol}>Symbol</Text>
+              <Text style={styles.tableCol}>Qty</Text>
+              <Text style={styles.tableCol}>Price</Text>
+              <Text style={styles.tableCol}>Total</Text>
+            </View>
+          </View>
+        </>
+      }
+      renderItem={({ item }) => (
+        <View style={styles.transactionRow}>
+          <Text style={styles.tableCol}>{new Date(item.date).toLocaleDateString()}</Text>
+          <Text style={[styles.tableCol, { color: item.action === "buy" ? "green" : "red" }]}>
+            {item.action.toUpperCase()}
+          </Text>
+          <Text style={styles.tableCol}>{item.symbol}</Text>
+          <Text style={styles.tableCol}>{item.quantity.toFixed(2)}</Text>
+          <Text style={styles.tableCol}>${item.price.toLocaleString()}</Text>
+          <Text style={styles.tableCol}>${(item.quantity * item.price).toLocaleString()}</Text>
+        </View>
+      )}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 15, backgroundColor: "#f9f9f9", alignItems: "center" },
-  backButton: { alignSelf: "flex-start", marginBottom: 10 },
-  backButtonText: { fontSize: 16, color: "#555" },
-  card: { width: "100%", maxWidth: 400, backgroundColor: "#fff", padding: 20, borderRadius: 8, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 10, color: "#333" },
-  info: { fontSize: 16, marginBottom: 5 },
-  chartContainer: { marginTop: 20, alignItems: "center" },
+  backButton: { padding: 10, marginBottom: 10 },
+  backButtonText: { color: "#2563eb", fontSize: 16 },
+  card: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    marginHorizontal: 16,
+    elevation: 3,
+  },
+  title: { fontSize: 22, fontWeight: "bold", marginBottom: 12 },
+  chartCard: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    marginHorizontal: 16,
+    alignItems: "center",
+    elevation: 3,
+  },
   chartTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  errorText: { color: "red", fontSize: 16, textAlign: "center" },
+  sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 8 },
+  label: { fontSize: 14, color: "#4b5563", marginBottom: 4 },
+  value: { fontSize: 16, fontWeight: "bold" },
+  row: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
+  statBox: { alignItems: "center", flex: 1, paddingHorizontal: 4 },
+  avatar: { width: 64, height: 64, borderRadius: 32, marginVertical: 8 },
+  tableHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  transactionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  tableCol: { flex: 1, fontSize: 12, textAlign: "center" },
+  errorText: { color: "red", fontSize: 16, textAlign: "center", marginTop: 20 },
 });
 
 export default PortfolioDetails;

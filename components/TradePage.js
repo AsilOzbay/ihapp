@@ -121,12 +121,11 @@ const TradePage = ({ crypto, onBack }) => {
         </Text>
       </View>
   
-      {/* Chart Section moved ABOVE picker */}
       {chartData && (
   <LineChart
     data={{
       ...chartData,
-      labels: Array(chartData.labels.length).fill(""), // ⛔ Yatay ekseni boşalt
+      labels: Array(chartData.labels.length).fill(""),
     }}
     width={350}
     height={250}
@@ -145,8 +144,6 @@ const TradePage = ({ crypto, onBack }) => {
   />
 )}
 
-  
-      {/* Portfolio Selection */}
       <Picker
         selectedValue={selectedPortfolioId}
         onValueChange={(value) => setSelectedPortfolioId(value)}
@@ -157,8 +154,7 @@ const TradePage = ({ crypto, onBack }) => {
           <Picker.Item key={portfolio._id} label={portfolio.name} value={portfolio._id} />
         ))}
       </Picker>
-  
-      {/* Trade Input Fields */}
+
       <View style={styles.tradeContainer}>
         <View style={styles.buttonGroup}>
           <TouchableOpacity

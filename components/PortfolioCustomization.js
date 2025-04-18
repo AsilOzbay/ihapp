@@ -40,7 +40,7 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
     setLoading(true);
 
     const endpoint = portfolio
-      ? `http://${API_BASE_URL}/portfolio/${portfolio._id}` // ✅ HATALI ENDPOINT DÜZELTİLDİ
+      ? `http://${API_BASE_URL}/portfolio/${portfolio._id}`
       : `http://${API_BASE_URL}/create-portfolio`;
 
     const method = portfolio ? "PUT" : "POST";

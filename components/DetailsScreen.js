@@ -25,7 +25,7 @@ const DetailsScreen = ({ crypto, onBack, onTrade }) => {
         const data = await response.json();
 
         setChartData({
-          labels: Array(data.length).fill(""), // 🧹 X eksenindeki tarihleri kaldır
+          labels: Array(data.length).fill(""),
           datasets: [{ data: data.map((point) => point.price) }],
         });
       } catch (error) {
@@ -56,7 +56,7 @@ const DetailsScreen = ({ crypto, onBack, onTrade }) => {
         ) : chartData ? (
           <LineChart
   data={chartData}
-  width={Dimensions.get("window").width - 40} // 🔁 Genişliği biraz küçülttük
+  width={Dimensions.get("window").width - 40}
   height={220}
   fromZero
   withHorizontalLabels={true}
@@ -81,7 +81,6 @@ const DetailsScreen = ({ crypto, onBack, onTrade }) => {
         )}
       </View>
 
-      {/* Details */}
       <View style={styles.detailBox}>
         <Text style={styles.label}>Current Price:</Text>
         <Text style={styles.value}>${crypto.price?.toLocaleString()}</Text>
@@ -104,7 +103,6 @@ const DetailsScreen = ({ crypto, onBack, onTrade }) => {
         <Text style={styles.value}>${crypto.mktCap?.toLocaleString()}</Text>
       </View>
 
-      {/* 🚀 Trade Button */}
       <TouchableOpacity style={styles.tradeButton} onPress={() => onTrade(crypto)}>
         <Text style={styles.tradeButtonText}>Trade</Text>
       </TouchableOpacity>
@@ -147,7 +145,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-    alignItems: "center", // 📌 Grafik ortalansın
+    alignItems: "center",
   },
   chartLabel: {
     fontSize: 16,

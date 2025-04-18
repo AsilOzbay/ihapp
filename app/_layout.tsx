@@ -1,13 +1,32 @@
-// ✅ RootLayout.tsx
+import React, { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthProvider, useAuth } from "../context/AuthContext";
-import { View, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+
+function SplashScreen() {
+  return (
+    <View style={styles.splashContainer}>
+      <Text style={styles.splashText}>INVESTING HUB</Text>
+    </View>
+  );
+}
 
 function LayoutTabs() {
   const { user, loading } = useAuth();
+  const [splashVisible, setSplashVisible] = useState(true);
 
-  if (loading) return <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}><ActivityIndicator size="large" /></View>;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplashVisible(false);
+    }, 3000); // 3 saniyelik splash ekran
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading || splashVisible) {
+    return <SplashScreen />;
+  }
 
   return (
     <Tabs
@@ -26,10 +45,11 @@ function LayoutTabs() {
         headerShown: true,
       })}
     >
+      <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="home" />
       <Tabs.Screen name="portfolio" />
       <Tabs.Screen name="learning-hub" />
-      {!user && <Tabs.Screen name="auth" />} 
+      {!user && <Tabs.Screen name="auth" />}
     </Tabs>
   );
 }
@@ -41,3 +61,18 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  splashContainer: {
+    flex: 1,
+    backgroundColor: "#2563EB",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  splashText: {
+    color: "white",
+    fontSize: 32,
+    fontWeight: "bold",
+    letterSpacing: 2,
+  },
+});

@@ -45,12 +45,10 @@ const RightSidebar = () => {
 
   return (
     <>
-      {/* News toggle button */}
       <TouchableOpacity style={styles.newsButton} onPress={togglePanel}>
         <Text style={styles.newsButtonText}>📰</Text>
       </TouchableOpacity>
 
-      {/* News panel modal */}
       <Modal visible={visible} animationType="slide" transparent onRequestClose={togglePanel}>
         <View style={styles.modalOverlay}>
           <View style={styles.panel}>

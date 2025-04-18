@@ -36,7 +36,7 @@ export default function Navbar() {
   };
 
   const toggleTheme = (theme) => {
-    if (theme !== "light" && theme !== "dark") return; // Güvenlik için kontrol
+    if (theme !== "light" && theme !== "dark") return;
     AsyncStorage.setItem("theme", theme);
     setModalVisible(false);
   };
@@ -75,13 +75,11 @@ export default function Navbar() {
           </TouchableOpacity>
         )}
 
-        {/* ⚙️ Ayarlar Butonu */}
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           <Text style={styles.settingsIcon}>⚙️</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Modal: Tema Seçimi */}
       <Modal
         visible={modalVisible}
         transparent

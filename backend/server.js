@@ -620,11 +620,11 @@ setInterval(async () => {
         quantity,
         price,
         total,
-        date: new Date(transactionDate), // Use provided transactionDate
+        date: new Date(transactionDate),
       };
   
       portfolio.transactions.push(newTransaction);
-      await portfolio.save(); // This needs to be inside an async function
+      await portfolio.save();
   
       res.status(201).json({ message: 'Transaction added successfully', portfolio });
     } catch (error) {
@@ -632,7 +632,6 @@ setInterval(async () => {
     }
   });
 
-  // ✅ Eksik olan endpoint: portfolio güncelleme
 app.put('/portfolio/:id', async (req, res) => {
   const { id } = req.params;
   const { name, avatar } = req.body;

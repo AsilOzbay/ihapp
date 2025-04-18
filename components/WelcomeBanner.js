@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { useAuth } from "../context/AuthContext"; // ✅ doğru path'e göre güncelle
+import { useAuth } from "../context/AuthContext";
 
 const WelcomeBanner = () => {
-  const { user } = useAuth(); // ✅ context'ten kullanıcıyı al
+  const { user } = useAuth();
 
   return (
     <View style={styles.banner}>

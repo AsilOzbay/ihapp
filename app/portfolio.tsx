@@ -77,7 +77,7 @@ export default function PortfolioScreen() {
   };
 
   const handleCreatePortfolio = () => {
-    setSelectedPortfolio(null); // ✅ EKLENDİ
+    setSelectedPortfolio(null);
     if (user) {
       setCustomizationVisible(true);
     } else {

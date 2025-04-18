@@ -28,7 +28,6 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Ayarlar ikonu */}
       {user && (
         <TouchableOpacity
           style={styles.settingsIcon}
@@ -38,7 +37,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Sağ üst köşeye 📰 butonu */}
       <View style={styles.newsButtonWrapper}>
         <RightSidebar />
       </View>
@@ -58,7 +56,6 @@ export default function HomeScreen() {
         <CryptoPricesTable />
       </ScrollView>
 
-      {/* Menü (Modal) */}
       <Modal
         visible={menuVisible}
         transparent
@@ -78,58 +75,76 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f3f4f6" },
-  scrollContainer: { padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f1f5f9",
+  },
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 60,
+  },
   heading: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#1f2937",
+    color: "#1e3a8a",
     marginBottom: 4,
   },
   subheading: {
-    fontSize: 14,
-    color: "#6b7280",
+    fontSize: 15,
+    color: "#64748b",
     textAlign: "center",
     marginBottom: 16,
   },
-  row: { flexDirection: "column", gap: 16 },
+  row: {
+    flexDirection: "column",
+    gap: 16,
+  },
   settingsIcon: {
     position: "absolute",
-    top: 16,
-    right: 16,
+    top: 18,
+    right: 18,
     zIndex: 10,
-    backgroundColor: "#e5e7eb",
-    padding: 8,
-    borderRadius: 20,
+    backgroundColor: "#e2e8f0",
+    padding: 10,
+    borderRadius: 50,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-start",
     alignItems: "flex-end",
-    paddingTop: 50,
+    paddingTop: 60,
     paddingRight: 20,
   },
   menuBox: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: "#ffffff",
+    padding: 18,
+    borderRadius: 12,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 6,
+    minWidth: 160,
   },
   logout: {
-    color: "red",
+    color: "#ef4444",
     fontSize: 16,
     fontWeight: "bold",
+    textAlign: "right",
   },
   newsButtonWrapper: {
     position: "absolute",
-    top: 56, // settingsIcon'un altına gelsin
-    right: 15, // ayarla hizalı kalsın
+    top: 66,
+    right: 20,
     zIndex: 10,
-    transform: [{ scale: 0.8 }], // boyutu küçült
+    transform: [{ scale: 0.9 }],
   },
+
 });

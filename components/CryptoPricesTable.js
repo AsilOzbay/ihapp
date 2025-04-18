@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DetailsScreen from "./DetailsScreen";
@@ -17,7 +18,7 @@ const CryptoPricesTable = () => {
   const [cryptoData, setCryptoData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCrypto, setSelectedCrypto] = useState(null);
-  const [viewMode, setViewMode] = useState("list"); // "list" | "details" | "trade"
+  const [viewMode, setViewMode] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [currency, setCurrency] = useState("USD");
 
@@ -85,11 +86,13 @@ const CryptoPricesTable = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Crypto Prices</Text>
 
-      <View style={styles.filterGroup}>
+      <View style={styles.pickerWrapper}>
         <Picker
           selectedValue={currency}
           onValueChange={(value) => setCurrency(value)}
           style={styles.picker}
+          itemStyle={styles.pickerItem}
+          dropdownIconColor="#333"
         >
           <Picker.Item label="USD" value="USD" />
           <Picker.Item label="EUR" value="EUR" />
@@ -121,7 +124,10 @@ const CryptoPricesTable = () => {
         return (
           <View key={index} style={styles.row}>
             <Text style={styles.cell}>{item.symbol}</Text>
-            <Text style={styles.cell}>{symbol}{price.toLocaleString()}</Text>
+            <Text style={styles.cell}>
+              {symbol}
+              {price.toLocaleString()}
+            </Text>
             <Text style={[styles.cell, +dailyChange > 0 ? styles.green : styles.red]}>
               {dailyChange}%
             </Text>
@@ -142,63 +148,106 @@ const CryptoPricesTable = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 10, backgroundColor: "#fff" },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 10 },
-  filterGroup: { marginBottom: 10 },
-  picker: {
-    width: "100%",
-    height: 45,
-    borderWidth: 1,
+  container: {
+    padding: 16,
+    backgroundColor: "#f1f5f9",
+    flexGrow: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 12,
+    color: "#111",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    paddingBottom: 6,
+  },
+  pickerWrapper: {
+    backgroundColor: "#fff",
     borderColor: "#ccc",
-    backgroundColor: "#f9f9f9",
+    borderWidth: 1,
+    borderRadius: 10,
+    marginBottom: 12,
+    overflow: "hidden",
+    height: 48,
+    justifyContent: "center",
+  },
+  picker: {
+    height: 52,
+    color: "#111",
+    paddingHorizontal: 8,
+  },
+  pickerItem: {
+    fontSize: 16,
   },
   searchInput: {
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 8,
-    marginBottom: 10,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 16,
+    backgroundColor: "#fff",
   },
   headerRow: {
     flexDirection: "row",
-    backgroundColor: "#eee",
-    paddingVertical: 6,
+    backgroundColor: "#e5e7eb",
+    paddingVertical: 8,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#cbd5e1",
+    marginBottom: 6,
   },
   headerCell: {
     flex: 1,
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 14,
+    color: "#1e293b",
     textAlign: "center",
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderColor: "#f0f0f0",
+    backgroundColor: "#fff",
+    marginBottom: 8,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   cell: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     textAlign: "center",
+    color: "#1f2937",
   },
-  green: { color: "green" },
-  red: { color: "red" },
+  green: {
+    color: "#16a34a",
+  },
+  red: {
+    color: "#dc2626",
+  },
   detailsButton: {
-    flex: 1,
     alignItems: "center",
-    backgroundColor: "#007bff",
+    backgroundColor: "#2563EB",
     paddingVertical: 6,
-    paddingHorizontal: 4,
-    borderRadius: 4,
-  },
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    minWidth: 70,
+  },  
   detailsButtonText: {
     color: "#fff",
     fontSize: 13,
+    fontWeight: "bold",
   },
 });
 

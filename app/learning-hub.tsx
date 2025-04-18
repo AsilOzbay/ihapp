@@ -9,7 +9,6 @@ export default function LearningHubScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Başlık */}
         <View style={styles.header}>
           <Text style={styles.title}>Welcome to the Learning Hub</Text>
           <Text style={styles.subtitle}>
@@ -17,12 +16,10 @@ export default function LearningHubScreen() {
           </Text>
         </View>
 
-        {/* Video Bölümü */}
         <View style={styles.section}>
           <VideoSection />
         </View>
 
-        {/* Quiz, Info, Chart bölümleri */}
         <View style={styles.section}>
           <QuizSection />
           <View style={styles.spacer} />

@@ -64,8 +64,12 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
       }
 
       await response.json();
-      setMessage("Portfolio saved successfully!");
-      Alert.alert("Success", "Portfolio saved successfully!", [{ text: "OK", onPress: onBack }]);
+      const successMessage = portfolio
+  ? "Portfolio updated successfully!"
+  : "Portfolio created successfully!";
+
+setMessage(successMessage);
+Alert.alert("Success", successMessage, [{ text: "OK", onPress: onBack }]);
     } catch (error) {
       console.error("Error saving portfolio:", error);
       setMessage("An error occurred. Please try again.");
@@ -114,7 +118,9 @@ const PortfolioCustomization = ({ portfolio, userId, onBack }) => {
           {isLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveButtonText}>Save Portfolio</Text>
+            <Text style={styles.saveButtonText}>
+  {portfolio ? "Save Portfolio" : "Create Portfolio"}
+</Text>
           )}
         </TouchableOpacity>
 

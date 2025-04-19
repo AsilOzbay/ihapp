@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthProvider, useAuth } from "../context/AuthContext";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 
 function SplashScreen() {
   return (
@@ -12,20 +12,28 @@ function SplashScreen() {
   );
 }
 
-function LayoutTabs() {
+function LayoutTabsWithConditionalAuth() {
   const { user, loading } = useAuth();
   const [splashVisible, setSplashVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSplashVisible(false);
-    }, 3000); // 3 saniyelik splash ekran
-
+    const timer = setTimeout(() => setSplashVisible(false), 3000);
     return () => clearTimeout(timer);
   }, []);
 
-  if (loading || splashVisible) {
-    return <SplashScreen />;
+  if (loading || splashVisible) return <SplashScreen />;
+
+  const screens = [
+    <Tabs.Screen key="index" name="index" options={{ href: null }} />,
+    <Tabs.Screen key="home" name="home" />,
+    <Tabs.Screen key="portfolio" name="portfolio" />,
+    <Tabs.Screen key="learning-hub" name="learning-hub" />,
+  ];
+
+  if (user) {
+    screens.push(
+      <Tabs.Screen key="auth" name="auth" options={{ href: null }} />
+    );
   }
 
   return (
@@ -45,11 +53,7 @@ function LayoutTabs() {
         headerShown: true,
       })}
     >
-      <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="home" />
-      <Tabs.Screen name="portfolio" />
-      <Tabs.Screen name="learning-hub" />
-      {!user && <Tabs.Screen name="auth" />}
+      {screens}
     </Tabs>
   );
 }
@@ -57,7 +61,7 @@ function LayoutTabs() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <LayoutTabs />
+      <LayoutTabsWithConditionalAuth />
     </AuthProvider>
   );
 }

@@ -9,7 +9,7 @@ const TradePage = ({ crypto, onBack }) => {
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState(crypto?.price || 0);
   const [action, setAction] = useState("");
-  const [timeframe, setTimeframe] = useState("1M");
+  const [timeframe, setTimeframe] = useState("1h");
   const [message, setMessage] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
   const [portfolios, setPortfolios] = useState([]);
@@ -102,122 +102,145 @@ const TradePage = ({ crypto, onBack }) => {
     }
   };
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity onPress={onBack} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
-  
-      <View style={styles.card}>
-        <Text style={styles.cryptoTitle}>{crypto.symbol}</Text>
-        <Text style={styles.cryptoPrice}>${crypto.price.toLocaleString()}</Text>
-        <Text
-          style={[
-            styles.cryptoChange,
-            crypto?.change > 0 ? styles.positiveChange : styles.negativeChange,
-          ]}
-        >
-          ({typeof crypto?.change === "number" ? crypto.change.toFixed(2) : "0.00"}%)
-        </Text>
-      </View>
-  
-      {chartData && (
-  <LineChart
-    data={{
-      ...chartData,
-      labels: Array(chartData.labels.length).fill(""),
-    }}
-    width={350}
-    height={250}
-    chartConfig={{
-      backgroundGradientFrom: "#f3f3f3",
-      backgroundGradientTo: "#fff",
-      color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-      labelColor: () => "#555",
-      propsForDots: { r: "3", strokeWidth: "1", stroke: "#007bff" },
-    }}
-    withVerticalLabels={true}
-    withHorizontalLabels={true}
-    withInnerLines={true}
-    withOuterLines={false}
-    style={{ borderRadius: 8 }}
-  />
-)}
+  const [tooltip, setTooltip] = useState(null);
 
-      <Picker
-        selectedValue={selectedPortfolioId}
-        onValueChange={(value) => setSelectedPortfolioId(value)}
-        style={styles.picker}
+return (
+  <ScrollView contentContainerStyle={styles.container}>
+    <TouchableOpacity onPress={onBack} style={styles.backButton}>
+      <Text style={styles.backButtonText}>Back</Text>
+    </TouchableOpacity>
+
+    <View style={styles.card}>
+      <Text style={styles.cryptoTitle}>{crypto.symbol}</Text>
+      <Text style={styles.cryptoPrice}>${crypto.price.toLocaleString()}</Text>
+      <Text
+        style={[
+          styles.cryptoChange,
+          crypto?.change > 0 ? styles.positiveChange : styles.negativeChange,
+        ]}
       >
-        <Picker.Item label="-- Select Portfolio --" value="" />
-        {portfolios.map((portfolio) => (
-          <Picker.Item key={portfolio._id} label={portfolio.name} value={portfolio._id} />
-        ))}
-      </Picker>
+        ({typeof crypto?.change === "number" ? crypto.change.toFixed(2) : "0.00"}%)
+      </Text>
+    </View>
 
-      <View style={styles.tradeContainer}>
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity
-            onPress={() => setAction("buy")}
-            style={[styles.actionButton, action === "buy" && styles.buyAction]}
-          >
-            <Text style={styles.actionText}>Buy</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setAction("sell")}
-            style={[styles.actionButton, action === "sell" && styles.sellAction]}
-          >
-            <Text style={styles.actionText}>Sell</Text>
-          </TouchableOpacity>
-        </View>
-  
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          placeholder="Quantity"
-          value={quantity}
-          onChangeText={setQuantity}
+    {chartData && (
+      <>
+        <LineChart
+          data={chartData}
+          width={350}
+          height={250}
+          chartConfig={{
+            backgroundGradientFrom: "#f3f3f3",
+            backgroundGradientTo: "#fff",
+            color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+            labelColor: () => "#555",
+            propsForDots: {
+              r: "3",
+              strokeWidth: "1",
+              stroke: "#007bff",
+            },
+            decimalPlaces: 4,
+          }}
+          withVerticalLabels={true}
+          withHorizontalLabels={true}
+          withInnerLines={true}
+          withOuterLines={false}
+          formatXLabel={(value) => {
+            const date = new Date(value.replace(" ", "T")); // safe parsing
+            return `${date.getHours()}:00`;
+          }}
+          formatYLabel={(value) => parseFloat(value).toFixed(4)}
+          onDataPointClick={({ value, index }) => {
+            setTooltip({
+              price: value,
+              time: chartData.labels[index],
+            });
+          }}
+          style={{ borderRadius: 8 }}
         />
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          placeholder="Price"
-          value={String(price)}
-          onChangeText={setPrice}
-        />
-  
-        <TouchableOpacity
-          onPress={() => setShowDatePicker(true)}
-          style={styles.datePickerButton}
-        >
-          <Text style={styles.datePickerText}>{transactionDate.toDateString()}</Text>
-        </TouchableOpacity>
-  
-        {showDatePicker && (
-          <DateTimePicker
-            value={transactionDate}
-            mode="datetime"
-            display="default"
-            onChange={(event, date) => {
-              setShowDatePicker(false);
-              if (date) setTransactionDate(date);
-            }}
-          />
+
+        {tooltip && (
+          <Text style={{ marginTop: 10, fontSize: 14, fontWeight: "600" }}>
+            🕒 {tooltip.time} — 💰 ${parseFloat(tooltip.price).toFixed(4)}
+          </Text>
         )}
-  
-        <Text style={styles.totalText}>
-          Total: $
-          {!isNaN(quantity) && !isNaN(price)
-            ? (Number(quantity) * Number(price)).toFixed(2)
-            : "0.00"}
-        </Text>
-  
-        <TouchableOpacity onPress={handleTrade} style={styles.tradeButton}>
-          <Text style={styles.tradeButtonText}>Execute Trade</Text>
+      </>
+    )}
+
+    <Picker
+      selectedValue={selectedPortfolioId}
+      onValueChange={(value) => setSelectedPortfolioId(value)}
+      style={styles.picker}
+    >
+      <Picker.Item label="-- Select Portfolio --" value="" />
+      {portfolios.map((portfolio) => (
+        <Picker.Item key={portfolio._id} label={portfolio.name} value={portfolio._id} />
+      ))}
+    </Picker>
+
+    <View style={styles.tradeContainer}>
+      <View style={styles.buttonGroup}>
+        <TouchableOpacity
+          onPress={() => setAction("buy")}
+          style={[styles.actionButton, action === "buy" && styles.buyAction]}
+        >
+          <Text style={styles.actionText}>Buy</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setAction("sell")}
+          style={[styles.actionButton, action === "sell" && styles.sellAction]}
+        >
+          <Text style={styles.actionText}>Sell</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
-  );
+
+      <TextInput
+        style={styles.input}
+        keyboardType="numeric"
+        placeholder="Quantity"
+        value={quantity}
+        onChangeText={setQuantity}
+      />
+      <TextInput
+        style={styles.input}
+        keyboardType="numeric"
+        placeholder="Price"
+        value={String(price)}
+        onChangeText={setPrice}
+      />
+
+      <TouchableOpacity
+        onPress={() => setShowDatePicker(true)}
+        style={styles.datePickerButton}
+      >
+        <Text style={styles.datePickerText}>{transactionDate.toDateString()}</Text>
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={transactionDate}
+          mode="datetime"
+          display="default"
+          onChange={(event, date) => {
+            setShowDatePicker(false);
+            if (date) setTransactionDate(date);
+          }}
+        />
+      )}
+
+      <Text style={styles.totalText}>
+        Total: $
+        {!isNaN(quantity) && !isNaN(price)
+          ? (Number(quantity) * Number(price)).toFixed(2)
+          : "0.00"}
+      </Text>
+
+      <TouchableOpacity onPress={handleTrade} style={styles.tradeButton}>
+        <Text style={styles.tradeButtonText}>Execute Trade</Text>
+      </TouchableOpacity>
+    </View>
+  </ScrollView>
+);
 };
 
 const styles = StyleSheet.create({

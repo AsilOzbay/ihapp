@@ -532,23 +532,61 @@ const fetchHistoricalData = async (symbol, interval = "1m", limit = 20) => {
 };
 let historicalDataCache = {};
 // Endpoint to get graph data
+
+const fs = require('fs');
+const path = require('path');
+const csv = require('csv-parser');
+
+// FIXED: Now always reads ADA-1m.csv and filters based on requested timeframe
 app.get('/graph-data/:symbol', async (req, res) => {
   const { symbol } = req.params;
-  const { timeframe } = req.query; 
-  const interval = timeframe || "1d"; 
-  const binanceSymbol = `${symbol.toUpperCase()}USDT`;
+  const timeframe = req.query.timeframe || '1m';
 
-  if (historicalDataCache[binanceSymbol]?.[interval]) {
-    return res.json(historicalDataCache[binanceSymbol][interval]);
-  }
+  // Always read the 1m CSV
+  const csvFilePath = path.join(__dirname, 'coindata', `${symbol.toUpperCase()}-1m.csv`);
+  const result = [];
 
-  const historicalData = await fetchHistoricalData(binanceSymbol, interval);
-  if (!historicalDataCache[binanceSymbol]) {
-    historicalDataCache[binanceSymbol] = {};
+  // Determine sampling rate based on timeframe
+  const samplingRate = {
+    '1m': 1,
+    '15m': 15,
+    '1h': 60,
+    '1d': 1440,
+    '1M': 1440 * 30,
+  }[timeframe] || 1;
+
+  try {
+    if (!fs.existsSync(csvFilePath)) {
+      return res.status(404).json({ message: `CSV not found for ${symbol}-1m` });
+    }
+
+    let index = 0;
+    fs.createReadStream(csvFilePath)
+      .pipe(csv({ headers: false }))
+      .on('data', (row) => {
+        if (index % samplingRate === 0) {
+          const time = row[0];
+          const price = parseFloat(row[4]);
+          if (!isNaN(price)) result.push({ time, price });
+        }
+        index++;
+      })
+      .on('end', () => {
+        const last50 = result.slice(-50);
+        res.json(last50);
+      })
+      .on('error', (err) => {
+        console.error('CSV parse error:', err.message);
+        res.status(500).json({ message: 'Error parsing CSV' });
+      });
+  } catch (error) {
+    console.error('Error reading CSV:', error.message);
+    res.status(500).json({ message: 'Error loading graph data' });
   }
-  historicalDataCache[binanceSymbol][interval] = historicalData;
-  res.json(historicalData);
 });
+
+
+
 
 // Periodic refresh of historical data
 setInterval(async () => {
@@ -620,19 +658,42 @@ setInterval(async () => {
         quantity,
         price,
         total,
-        date: new Date(transactionDate), // Use provided transactionDate
+        date: new Date(transactionDate),
       };
   
       portfolio.transactions.push(newTransaction);
-      await portfolio.save(); // This needs to be inside an async function
+      await portfolio.save();
   
       res.status(201).json({ message: 'Transaction added successfully', portfolio });
     } catch (error) {
       res.status(500).json({ message: 'Error adding transaction', error: error.message });
     }
   });
-  
 
+app.put('/portfolio/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, avatar } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Name is required' });
+  }
+
+  try {
+    const updated = await Portfolio.findByIdAndUpdate(
+      id,
+      { name, avatar },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+
+    res.status(200).json({ message: 'Portfolio updated successfully', portfolio: updated });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating portfolio', error: error.message });
+  }
+});
 
   app.put('/portfolio/:portfolioId/transaction/:transactionId', async (req, res) => {
     const { portfolioId, transactionId } = req.params;

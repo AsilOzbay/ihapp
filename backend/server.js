@@ -538,29 +538,25 @@ const path = require('path');
 const csv = require('csv-parser');
 
 app.get('/graph-data/:symbol', async (req, res) => {
-  console.log('Graph end');
   const { symbol } = req.params;
-  const { timeframe } = req.query;
-  const tf = '1h';
-
-  const csvFilePath = path.join(__dirname, 'coindata', `${symbol.toUpperCase()}-${tf}.csv`);
+  const timeframe = req.query.timeframe || '1h'; // parametreyi al
+  const csvFilePath = path.join(__dirname, 'coindata', `${symbol.toUpperCase()}-${timeframe}.csv`);
   const result = [];
-  console.log(csvFilePath);
+
   try {
     if (!fs.existsSync(csvFilePath)) {
-      return res.status(404).json({ message: `CSV not found for ${symbol}-${tf}` });
-      console.log('CSV not found.');
+      return res.status(404).json({ message: `CSV not found for ${symbol}-${timeframe}` });
     }
 
     fs.createReadStream(csvFilePath)
       .pipe(csv({ headers: false }))
       .on('data', (row) => {
-        const time = row[0]; // formatted as "2024-01-01 00:00:00"
-        const price = parseFloat(row[4]); // closing price
+        const time = row[0];
+        const price = parseFloat(row[4]);
         result.push({ time, price });
       })
       .on('end', () => {
-        const last50 = result.slice(-50); // get only the last 50 hours
+        const last50 = result.slice(-50);
         res.json(last50);
       })
       .on('error', (err) => {
@@ -572,6 +568,7 @@ app.get('/graph-data/:symbol', async (req, res) => {
     res.status(500).json({ message: 'Error loading graph data' });
   }
 });
+
 
 // Periodic refresh of historical data
 setInterval(async () => {

@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Alert,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { LineChart } from "react-native-chart-kit";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { API_BASE_URL } from "./env-config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 const TradePage = ({ crypto, onBack }) => {
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState(crypto?.price || 0);
   const [action, setAction] = useState("");
-  const [timeframe, setTimeframe] = useState("1h"); // 1h or 1m
+  const [timeframe, setTimeframe] = useState("1M");
+  const [message, setMessage] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
   const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState("");
   const [chartData, setChartData] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [tooltip, setTooltip] = useState(null);
+
+  if (!crypto) {
+    console.log("No crypto selected. `crypto` is:", crypto);
+    return null;
+  }
 
   useEffect(() => {
     const fetchPortfolios = async () => {
@@ -39,6 +35,7 @@ const TradePage = ({ crypto, onBack }) => {
         console.error("Error fetching portfolios:", error);
       }
     };
+  
     fetchPortfolios();
   }, []);
 
@@ -47,6 +44,7 @@ const TradePage = ({ crypto, onBack }) => {
       try {
         const response = await fetch(`http://${API_BASE_URL}/graph-data/${crypto.symbol}?timeframe=${timeframe}`);
         const data = await response.json();
+
         setChartData({
           labels: data.map((point) => point.time),
           datasets: [{ data: data.map((point) => point.price) }],
@@ -55,15 +53,30 @@ const TradePage = ({ crypto, onBack }) => {
         console.error("Error fetching graph data:", error);
       }
     };
+
     fetchGraphData();
   }, [crypto.symbol, timeframe]);
 
   const handleTrade = async () => {
-    if (!action || !selectedPortfolioId || quantity <= 0 || price <= 0) {
-      Alert.alert("Error", "Please complete all trade fields.");
+    if (!action) {
+      Alert.alert("Error", "Please select Buy or Sell.");
       return;
     }
-    const total = (Number(quantity) * Number(price)).toFixed(2);
+
+    if (!selectedPortfolioId) {
+      Alert.alert("Error", "Please select a portfolio.");
+      return;
+    }
+
+    if (quantity <= 0 || price <= 0) {
+      Alert.alert("Error", "Please enter valid quantity and price.");
+      return;
+    }
+
+    const total = (Number(quantity) && Number(price))
+    ? (Number(quantity) * Number(price)).toFixed(2)
+    : '0.00';
+  
     try {
       const response = await fetch(`http://${API_BASE_URL}/portfolio/${selectedPortfolioId}/transaction`, {
         method: "POST",
@@ -89,14 +102,12 @@ const TradePage = ({ crypto, onBack }) => {
     }
   };
 
-  if (!crypto) return null;
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity onPress={onBack} style={styles.backButton}>
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
-
+  
       <View style={styles.card}>
         <Text style={styles.cryptoTitle}>{crypto.symbol}</Text>
         <Text style={styles.cryptoPrice}>${crypto.price.toLocaleString()}</Text>
@@ -109,52 +120,29 @@ const TradePage = ({ crypto, onBack }) => {
           ({typeof crypto?.change === "number" ? crypto.change.toFixed(2) : "0.00"}%)
         </Text>
       </View>
-
+  
       {chartData && (
-        <>
-          <Picker
-            selectedValue={timeframe}
-            onValueChange={(value) => setTimeframe(value)}
-            style={[styles.picker, { marginBottom: 10 }]}
-          >
-            <Picker.Item label="Hourly (1h)" value="1h" />
-            <Picker.Item label="Minute (1m)" value="1m" />
-          </Picker>
-
-          <LineChart
-            data={chartData}
-            width={350}
-            height={250}
-            chartConfig={{
-              backgroundGradientFrom: "#f3f3f3",
-              backgroundGradientTo: "#fff",
-              color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-              labelColor: () => "#555",
-              propsForDots: { r: "3", strokeWidth: "1", stroke: "#007bff" },
-              decimalPlaces: 4,
-            }}
-            withVerticalLabels
-            withHorizontalLabels
-            withInnerLines
-            withOuterLines={false}
-            formatXLabel={(value) => {
-              const date = new Date(value.replace(" ", "T"));
-              return `${date.getHours()}:${date.getMinutes().toString().padStart(2, "0")}`;
-            }}
-            formatYLabel={(value) => parseFloat(value).toFixed(4)}
-            onDataPointClick={({ value, index }) => {
-              setTooltip({ price: value, time: chartData.labels[index] });
-            }}
-            style={{ borderRadius: 8 }}
-          />
-
-          {tooltip && (
-            <Text style={{ marginTop: 10, fontSize: 14, fontWeight: "600" }}>
-              🕒 {tooltip.time} — 💰 ${parseFloat(tooltip.price).toFixed(4)}
-            </Text>
-          )}
-        </>
-      )}
+  <LineChart
+    data={{
+      ...chartData,
+      labels: Array(chartData.labels.length).fill(""),
+    }}
+    width={350}
+    height={250}
+    chartConfig={{
+      backgroundGradientFrom: "#f3f3f3",
+      backgroundGradientTo: "#fff",
+      color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+      labelColor: () => "#555",
+      propsForDots: { r: "3", strokeWidth: "1", stroke: "#007bff" },
+    }}
+    withVerticalLabels={true}
+    withHorizontalLabels={true}
+    withInnerLines={true}
+    withOuterLines={false}
+    style={{ borderRadius: 8 }}
+  />
+)}
 
       <Picker
         selectedValue={selectedPortfolioId}
@@ -182,7 +170,7 @@ const TradePage = ({ crypto, onBack }) => {
             <Text style={styles.actionText}>Sell</Text>
           </TouchableOpacity>
         </View>
-
+  
         <TextInput
           style={styles.input}
           keyboardType="numeric"
@@ -197,14 +185,14 @@ const TradePage = ({ crypto, onBack }) => {
           value={String(price)}
           onChangeText={setPrice}
         />
-
+  
         <TouchableOpacity
           onPress={() => setShowDatePicker(true)}
           style={styles.datePickerButton}
         >
           <Text style={styles.datePickerText}>{transactionDate.toDateString()}</Text>
         </TouchableOpacity>
-
+  
         {showDatePicker && (
           <DateTimePicker
             value={transactionDate}
@@ -216,11 +204,14 @@ const TradePage = ({ crypto, onBack }) => {
             }}
           />
         )}
-
+  
         <Text style={styles.totalText}>
-          Total: ${!isNaN(quantity) && !isNaN(price) ? (Number(quantity) * Number(price)).toFixed(2) : "0.00"}
+          Total: $
+          {!isNaN(quantity) && !isNaN(price)
+            ? (Number(quantity) * Number(price)).toFixed(2)
+            : "0.00"}
         </Text>
-
+  
         <TouchableOpacity onPress={handleTrade} style={styles.tradeButton}>
           <Text style={styles.tradeButtonText}>Execute Trade</Text>
         </TouchableOpacity>
@@ -230,14 +221,21 @@ const TradePage = ({ crypto, onBack }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 15, backgroundColor: "#f9f9f9", alignItems: "center" },
+  container: {
+    padding: 15,
+    backgroundColor: "#f9f9f9",
+    alignItems: "center",
+  },
   backButton: {
     padding: 10,
     backgroundColor: "#ddd",
     borderRadius: 8,
     marginBottom: 10,
   },
-  backButtonText: { fontSize: 16, color: "#333" },
+  backButtonText: {
+    fontSize: 16,
+    color: "#333",
+  },
   card: {
     padding: 20,
     backgroundColor: "#ffffff",
@@ -250,11 +248,25 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  cryptoTitle: { fontSize: 24, fontWeight: "bold" },
-  cryptoPrice: { fontSize: 22, color: "#007bff", marginTop: 4 },
-  cryptoChange: { fontSize: 18, marginTop: 4 },
-  positiveChange: { color: "green" },
-  negativeChange: { color: "red" },
+  cryptoTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  cryptoPrice: {
+    fontSize: 22,
+    color: "#007bff",
+    marginTop: 4,
+  },
+  cryptoChange: {
+    fontSize: 18,
+    marginTop: 4,
+  },
+  positiveChange: {
+    color: "green",
+  },
+  negativeChange: {
+    color: "red",
+  },
   picker: {
     width: "100%",
     backgroundColor: "#e5e7eb",
@@ -345,5 +357,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
 
 export default TradePage;

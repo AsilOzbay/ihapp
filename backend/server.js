@@ -532,45 +532,22 @@ const fetchHistoricalData = async (symbol, interval = "1m", limit = 20) => {
 };
 let historicalDataCache = {};
 // Endpoint to get graph data
-
-const fs = require('fs');
-const path = require('path');
-const csv = require('csv-parser');
-
 app.get('/graph-data/:symbol', async (req, res) => {
-  console.log('Graph end');
   const { symbol } = req.params;
-  const { timeframe } = req.query;
-  const tf = '1h';
+  const { timeframe } = req.query; 
+  const interval = timeframe || "1d"; 
+  const binanceSymbol = `${symbol.toUpperCase()}USDT`;
 
-  const csvFilePath = path.join(__dirname, 'coindata', `${symbol.toUpperCase()}-${tf}.csv`);
-  const result = [];
-  console.log(csvFilePath);
-  try {
-    if (!fs.existsSync(csvFilePath)) {
-      return res.status(404).json({ message: `CSV not found for ${symbol}-${tf}` });
-      console.log('CSV not found.');
-    }
-
-    fs.createReadStream(csvFilePath)
-      .pipe(csv({ headers: false }))
-      .on('data', (row) => {
-        const time = row[0]; // formatted as "2024-01-01 00:00:00"
-        const price = parseFloat(row[4]); // closing price
-        result.push({ time, price });
-      })
-      .on('end', () => {
-        const last50 = result.slice(-50); // get only the last 50 hours
-        res.json(last50);
-      })
-      .on('error', (err) => {
-        console.error('CSV parse error:', err.message);
-        res.status(500).json({ message: 'Error parsing CSV' });
-      });
-  } catch (error) {
-    console.error('Error reading CSV:', error.message);
-    res.status(500).json({ message: 'Error loading graph data' });
+  if (historicalDataCache[binanceSymbol]?.[interval]) {
+    return res.json(historicalDataCache[binanceSymbol][interval]);
   }
+
+  const historicalData = await fetchHistoricalData(binanceSymbol, interval);
+  if (!historicalDataCache[binanceSymbol]) {
+    historicalDataCache[binanceSymbol] = {};
+  }
+  historicalDataCache[binanceSymbol][interval] = historicalData;
+  res.json(historicalData);
 });
 
 // Periodic refresh of historical data

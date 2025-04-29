@@ -13,6 +13,7 @@ import { Picker } from "@react-native-picker/picker";
 import DetailsScreen from "./DetailsScreen";
 import TradePage from "./TradePage";
 import { API_BASE_URL } from "./env-config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CryptoPricesTable = () => {
   const [cryptoData, setCryptoData] = useState([]);
@@ -21,6 +22,7 @@ const CryptoPricesTable = () => {
   const [viewMode, setViewMode] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [currency, setCurrency] = useState("USD");
+  const [selectedCoins, setSelectedCoins] = useState([]);
 
   const conversionRates = { USD: 1, EUR: 0.9, GBP: 0.8, TRY: 27 };
   const currencySymbols = { USD: "$", EUR: "€", GBP: "£", TRY: "₺" };
@@ -38,8 +40,16 @@ const CryptoPricesTable = () => {
       }
     };
 
+    const loadSelectedCoins = async () => {
+      const stored = await AsyncStorage.getItem("selectedCoins");
+      if (stored) {
+        setSelectedCoins(JSON.parse(stored));
+      }
+    };
+
     setLoading(true);
     fetchData();
+    loadSelectedCoins();
   }, []);
 
   if (loading) {
@@ -78,9 +88,9 @@ const CryptoPricesTable = () => {
     );
   }
 
-  const filteredData = cryptoData.filter((item) =>
-    item.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredData = cryptoData
+    .filter((item) => item.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((item) => selectedCoins.length === 0 || selectedCoins.includes(item.symbol));
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -243,7 +253,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 8,
     minWidth: 70,
-  },  
+  },
   detailsButtonText: {
     color: "#fff",
     fontSize: 13,

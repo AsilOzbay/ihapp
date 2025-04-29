@@ -13,18 +13,24 @@ import { useAuth } from "../context/AuthContext";
 
 import WelcomeBanner from "../components/WelcomeBanner";
 import TrendingCoins from "../components/TrendingCoins";
-import TopExchanges from "../components/TopExchanges";
+import TopExchanges from "../components/TopLosers";
 import CryptoPricesTable from "../components/CryptoPricesTable";
 import RightSidebar from "../components/RightSidebar";
+import SettingsScreen from "../components/SettingsScreen";
 
 export default function HomeScreen() {
   const { logout, user } = useAuth();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleLogout = async () => {
     setMenuVisible(false);
     await logout();
   };
+
+  if (showSettings) {
+    return <SettingsScreen onBack={() => setShowSettings(false)} />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -64,7 +70,13 @@ export default function HomeScreen() {
       >
         <TouchableOpacity style={styles.modalOverlay} onPress={() => setMenuVisible(false)}>
           <View style={styles.menuBox}>
-            <TouchableOpacity onPress={handleLogout}>
+            <TouchableOpacity onPress={() => {
+              setMenuVisible(false);
+              setShowSettings(true);
+            }}>
+              <Text style={styles.settingsOption}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={{ marginTop: 10 }}>
               <Text style={styles.logout}>Logout</Text>
             </TouchableOpacity>
           </View>
@@ -139,6 +151,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "right",
   },
+  settingsOption: {
+    color: "#2563eb",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "right",
+  },
   newsButtonWrapper: {
     position: "absolute",
     top: 66,
@@ -146,5 +164,4 @@ const styles = StyleSheet.create({
     zIndex: 10,
     transform: [{ scale: 0.9 }],
   },
-
 });

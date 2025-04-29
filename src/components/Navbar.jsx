@@ -1,12 +1,16 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useSelectedCoins } from '../context/SelectedCoinsContext';
+import ManageCoinsModal from './ManageCoinsModal';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const { theme, setTheme } = useTheme();
+  const { clearSelectedCoins } = useSelectedCoins();
   const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef(null); // Ref tanımı
+  const [showManageCoins, setShowManageCoins] = useState(false);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,20 +22,24 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = () => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user?.id) {
+      localStorage.removeItem(`selectedCoins_${user.id}`);
+    }
+    clearSelectedCoins(); // Sadece context sıfırlanır (database değiştirilmez)
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
     navigate('/auth');
   };
 
-  // ✅ Click-outside kapatma davranışı
+  // Dropdown dışında bir yere tıklanınca kapatma
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -40,71 +48,82 @@ export default function Navbar() {
 
   return (
     <nav className="bg-gray-800 text-white p-4 grid grid-cols-3 items-center">
-  {/* Sol: Logo */}
-  <div className="flex items-center">
-    <img
-      src="https://i.hizliresim.com/bmkwbe4.png"
-      alt="Logo"
-      className="h-12 w-12 mr-2"
-    />
-    <h1 className="text-lg font-bold whitespace-nowrap">INVESTING HUB</h1>
-  </div>
+      {/* Sol: Logo */}
+      <div className="flex items-center">
+        <img
+          src="https://i.hizliresim.com/bmkwbe4.png"
+          alt="Logo"
+          className="h-12 w-12 mr-2"
+        />
+        <h1 className="text-lg font-bold whitespace-nowrap">INVESTING HUB</h1>
+      </div>
 
-  {/* Orta: Navigation Links */}
-  <div className="flex justify-center space-x-6">
-    <Link to="/" className="hover:text-gray-400">Home</Link>
-    <Link to="/portfolio" className="hover:text-gray-400">Portfolio</Link>
-    <Link to="/learning-hub" className="hover:text-gray-400">Learning Hub</Link>
-    {user ? (
-      <button onClick={handleLogout} className="hover:text-red-400">Logout</button>
-    ) : (
-      <Link
-        to="/auth"
-        state={{ from: location.pathname }}
-        className="hover:text-gray-400"
-      >
-        Login/Register
-      </Link>
-    )}
-  </div>
+      {/* Orta: Navigation Links */}
+      <div className="flex justify-center space-x-6">
+        <Link to="/" className="hover:text-gray-400">Home</Link>
+        <Link to="/portfolio" className="hover:text-gray-400">Portfolio</Link>
+        <Link to="/learning-hub" className="hover:text-gray-400">Learning Hub</Link>
+        {user ? (
+          <button onClick={handleLogout} className="hover:text-red-400">Logout</button>
+        ) : (
+          <Link
+            to="/auth"
+            state={{ from: location.pathname }}
+            className="hover:text-gray-400"
+          >
+            Login/Register
+          </Link>
+        )}
+      </div>
 
-  {/* Sağ: Ayarlar ve kullanıcı adı */}
-  <div className="flex justify-end items-center space-x-4">
-    {user && (
-      <span className="text-gray-200 hidden md:inline">{user.firstName} {user.lastName}</span>
-    )}
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setShowDropdown(!showDropdown)}
-        className="bg-gray-700 px-2 py-1 rounded"
-      >
-        ⚙️
-      </button>
-      {showDropdown && (
-        <div className="absolute right-0 mt-2 bg-white dark:bg-gray-800 text-black dark:text-white shadow-md rounded w-40 z-50">
+      {/* Sağ: Ayarlar ve Kullanıcı Adı */}
+      <div className="flex justify-end items-center space-x-4">
+        {user && (
+          <span className="text-gray-200 hidden md:inline">{user.firstName} {user.lastName}</span>
+        )}
+        <div className="relative" ref={dropdownRef}>
           <button
-            className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => {
-              setTheme('light');
-              setShowDropdown(false);
-            }}
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="bg-gray-700 px-2 py-1 rounded"
           >
-            ☀️ Light Mode
+            ⚙️
           </button>
-          <button
-            className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => {
-              setTheme('dark');
-              setShowDropdown(false);
-            }}
-          >
-            🌙 Dark Mode
-          </button>
+          {showDropdown && (
+            <div className="absolute right-0 mt-2 bg-white dark:bg-gray-800 text-black dark:text-white shadow-md rounded w-40 z-50">
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setTheme('light');
+                  setShowDropdown(false);
+                }}
+              >
+                ☀️ Light Mode
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setTheme('dark');
+                  setShowDropdown(false);
+                }}
+              >
+                🌙 Dark Mode
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setShowManageCoins(true);
+                  setShowDropdown(false);
+                }}
+              >
+                🪙 Manage Coins
+              </button>
+            </div>
+          )}
+          {showManageCoins && (
+            <ManageCoinsModal onClose={() => setShowManageCoins(false)} />
+          )}
         </div>
-      )}
-    </div>
-  </div>
-</nav>
-
+      </div>
+    </nav>
   );
 }

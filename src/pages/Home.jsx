@@ -2,7 +2,6 @@ import React from "react";
 import TrendingCoins from "../components/TrendingCoins";
 import TopExchanges from "../components/TopExchanges";
 import CryptoPricesTable from "../components/CryptoPricesTable";
-import WelcomeBanner from "../components/WelcomeBanner";
 import RightSidebar from "../components/RightSidebar";
 
 const Home = () => {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { SelectedCoinsProvider } from "../context/SelectedCoinsContext";
 import { View, Text, StyleSheet } from "react-native";
 
 function SplashScreen() {
@@ -61,7 +62,9 @@ function LayoutTabsWithConditionalAuth() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <LayoutTabsWithConditionalAuth />
+      <SelectedCoinsProvider>
+        <LayoutTabsWithConditionalAuth />
+      </SelectedCoinsProvider>
     </AuthProvider>
   );
 }

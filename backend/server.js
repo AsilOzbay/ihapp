@@ -12,6 +12,7 @@ const User = require('./models/User');
 const fetch = require("node-fetch");
 const Portfolio = require('./models/Portfolio');
 const nodemailer = require('nodemailer');
+const Settings = require('./models/Settings');
 require("dotenv").config();
 
 //deneme2
@@ -875,6 +876,71 @@ app.delete('/portfolio/:portfolioId/transaction/:transactionId', async (req, res
     res.status(500).json({ message: 'Error deleting transaction', error: error.message });
   }
 });
+
+
+// -------------------- SETTINGS --------------------
+
+// Yeni Settings yaratma
+app.post('/settings', async (req, res) => {
+  try {
+    const { userId, theme, selectedCoins } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'userId is required.' });
+    }
+
+    const existingSettings = await Settings.findOne({ userId });
+    if (existingSettings) {
+      return res.status(400).json({ message: 'Settings already exist for this user.' });
+    }
+
+    const newSettings = new Settings({
+      userId,
+      theme: theme || 'light',
+      selectedCoins: selectedCoins || [],
+    });
+
+    await newSettings.save();
+    res.status(201).json({ message: 'Settings created successfully', settings: newSettings });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating settings', error: error.message });
+  }
+});
+
+// Kullanıcı ayarlarını getir
+app.get('/settings/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const settings = await Settings.findOne({ userId });
+    if (!settings) {
+      return res.status(404).json({ message: 'Settings not found for this user.' });
+    }
+
+    res.status(200).json(settings);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching settings', error: error.message });
+  }
+});
+
+// Kullanıcı ayarlarını güncelle
+app.put('/settings/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { theme, selectedCoins } = req.body;
+
+    const updatedSettings = await Settings.findOneAndUpdate(
+      { userId },
+      { theme, selectedCoins },
+      { new: true, upsert: true } // upsert: true olursa yoksa yeni yaratır
+    );
+
+    res.status(200).json({ message: 'Settings updated successfully', settings: updatedSettings });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating settings', error: error.message });
+  }
+});
+
 
 
 // -------------------- NEWS --------------------

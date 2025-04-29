@@ -9,6 +9,9 @@ import {
   SafeAreaView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../components/env-config";
 
 const availableCoins = [
   "BTC", "ETH", "BNB", "XRP", "ADA", "SOL", "DOGE", "MATIC", "DOT", "SHIB",
@@ -16,15 +19,27 @@ const availableCoins = [
 ];
 
 const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
+  const { user } = useAuth();
   const [selectedCoins, setSelectedCoins] = useState<string[]>([]);
 
   useEffect(() => {
     const loadSettings = async () => {
-      const stored = await AsyncStorage.getItem("selectedCoins");
-      if (stored) setSelectedCoins(JSON.parse(stored));
+      if (user) {
+        try {
+          const res = await axios.get(`http://${API_BASE_URL}/settings/${user.id}`);
+          if (res.data.selectedCoins) {
+            setSelectedCoins(res.data.selectedCoins);
+          }
+        } catch (err) {
+          console.error("Error loading user settings:", err);
+        }
+      } else {
+        const stored = await AsyncStorage.getItem("guest_selectedCoins");
+        if (stored) setSelectedCoins(JSON.parse(stored));
+      }
     };
     loadSettings();
-  }, []);
+  }, [user]);
 
   const toggleCoin = (symbol: string) => {
     setSelectedCoins((prev) =>
@@ -35,8 +50,24 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
   };
 
   const saveSettings = async () => {
-    await AsyncStorage.setItem("selectedCoins", JSON.stringify(selectedCoins));
+    if (user) {
+      try {
+        await axios.put(`http://${API_BASE_URL}/settings/${user.id}`, { selectedCoins });
+      } catch (err) {
+        console.error("Error saving settings:", err);
+      }
+    } else {
+      await AsyncStorage.setItem("guest_selectedCoins", JSON.stringify(selectedCoins));
+    }
     onBack();
+  };
+
+  const handleSelectAll = () => {
+    setSelectedCoins([...availableCoins]);
+  };
+
+  const handleClearAll = () => {
+    setSelectedCoins([]);
   };
 
   return (
@@ -48,6 +79,17 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
 
         <Text style={styles.title}>Select Your Favorite Coins</Text>
 
+        {/* Select All / Clear All Buttons */}
+        <View style={styles.actionsRow}>
+          <TouchableOpacity onPress={handleSelectAll} style={styles.selectButton}>
+            <Text style={styles.selectButtonText}>Select All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleClearAll} style={styles.clearButton}>
+            <Text style={styles.clearButtonText}>Clear All</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Coin List */}
         <View style={styles.coinsGrid}>
           {availableCoins.map((coin) => (
             <TouchableOpacity
@@ -76,6 +118,21 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f3f4f6" },
   scrollContainer: { padding: 20 },
   title: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
+  actionsRow: { flexDirection: "row", justifyContent: "space-around", marginBottom: 16 },
+  selectButton: {
+    backgroundColor: "#22c55e",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  clearButton: {
+    backgroundColor: "#ef4444",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  selectButtonText: { color: "white", fontWeight: "bold" },
+  clearButtonText: { color: "white", fontWeight: "bold" },
   coinsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",

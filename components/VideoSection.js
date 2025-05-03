@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
+import { useTheme } from "../context/ThemeContext";
 
 const videos = [
   {
@@ -21,6 +22,9 @@ const videos = [
 ];
 
 const VideoSection = () => {
+  const { isDarkMode: isDark } = useTheme();
+  const styles = getStyles(isDark);
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Educational Videos</Text>
@@ -33,7 +37,7 @@ const VideoSection = () => {
             source={{
               html: `
                 <html>
-                  <body style="margin:0;padding:0;">
+                  <body style="margin:0;padding:0;background-color:transparent;">
                     <iframe 
                       width="100%" 
                       height="100%" 
@@ -57,29 +61,34 @@ const VideoSection = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { padding: 15, backgroundColor: "#f9f9f9" },
-  header: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
-    textAlign: "center",
-  },
-  videoContainer: {
-    marginBottom: 20,
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  videoTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
-    color: "#444",
-  },
-  video: { height: 200 },
-});
+const getStyles = (isDark) =>
+  StyleSheet.create({
+    container: {
+      padding: 15,
+      backgroundColor: isDark ? "#0f172a" : "#f9f9f9",
+      flex: 1,
+    },
+    header: {
+      fontSize: 20,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: isDark ? "#f8fafc" : "#333",
+      textAlign: "center",
+    },
+    videoContainer: {
+      marginBottom: 20,
+      backgroundColor: isDark ? "#1e293b" : "#fff",
+      padding: 10,
+      borderRadius: 8,
+      overflow: "hidden",
+    },
+    videoTitle: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 5,
+      color: isDark ? "#e2e8f0" : "#444",
+    },
+    video: { height: 200 },
+  });
 
 export default VideoSection;

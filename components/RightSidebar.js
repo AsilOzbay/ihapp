@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import { API_BASE_URL } from "./env-config";
+import { useTheme } from "../context/ThemeContext";
 
 const RightSidebar = () => {
   const [visible, setVisible] = useState(false);
@@ -17,6 +18,9 @@ const RightSidebar = () => {
   const [cryptoPanicNews, setCryptoPanicNews] = useState([]);
   const [dailyAnalysis, setDailyAnalysis] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  const { isDarkMode } = useTheme();
+  const styles = getStyles(isDarkMode);
 
   const togglePanel = () => setVisible(!visible);
 
@@ -87,10 +91,10 @@ const RightSidebar = () => {
                     </TouchableOpacity>
                   ))
                 ) : (
-                  <Text>No news available.</Text>
+                  <Text style={styles.text}>No news available.</Text>
                 )
               ) : (
-                <Text>{dailyAnalysis}</Text>
+                <Text style={styles.text}>{dailyAnalysis}</Text>
               )}
               <Text style={styles.timestamp}>Last updated: {lastUpdated}</Text>
             </ScrollView>
@@ -101,76 +105,81 @@ const RightSidebar = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  newsButton: {
-    backgroundColor: "#2563eb",
-    padding: 10,
-    borderRadius: 30,
-  },
-  newsButtonText: {
-    fontSize: 20,
-    color: "white",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-  panel: {
-    backgroundColor: "white",
-    height: "80%",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  close: {
-    fontSize: 20,
-    color: "#ef4444",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  tabs: {
-    flexDirection: "row",
-    marginVertical: 10,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderRadius: 6,
-    backgroundColor: "#e5e7eb",
-    marginRight: 8,
-  },
-  activeTab: {
-    backgroundColor: "#2563eb",
-  },
-  tabText: {
-    color: "#374151",
-  },
-  activeText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  content: {
-    marginTop: 10,
-  },
-  newsItem: {
-    color: "#2563eb",
-    marginBottom: 12,
-    fontSize: 14,
-  },
-  timestamp: {
-    marginTop: 20,
-    fontSize: 12,
-    color: "#9ca3af",
-  },
-});
+const getStyles = (isDark) =>
+  StyleSheet.create({
+    newsButton: {
+      backgroundColor: "#2563eb",
+      padding: 10,
+      borderRadius: 30,
+    },
+    newsButtonText: {
+      fontSize: 20,
+      color: "white",
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      justifyContent: "flex-end",
+    },
+    panel: {
+      backgroundColor: isDark ? "#1f2937" : "white",
+      height: "80%",
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 16,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    close: {
+      fontSize: 20,
+      color: "#ef4444",
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: isDark ? "#f8fafc" : "#111827",
+    },
+    tabs: {
+      flexDirection: "row",
+      marginVertical: 10,
+    },
+    tabButton: {
+      flex: 1,
+      paddingVertical: 8,
+      alignItems: "center",
+      borderRadius: 6,
+      backgroundColor: isDark ? "#374151" : "#e5e7eb",
+      marginRight: 8,
+    },
+    activeTab: {
+      backgroundColor: "#2563eb",
+    },
+    tabText: {
+      color: isDark ? "#e2e8f0" : "#374151",
+    },
+    activeText: {
+      color: "white",
+      fontWeight: "bold",
+    },
+    content: {
+      marginTop: 10,
+    },
+    newsItem: {
+      color: "#2563eb",
+      marginBottom: 12,
+      fontSize: 14,
+    },
+    timestamp: {
+      marginTop: 20,
+      fontSize: 12,
+      color: isDark ? "#9ca3af" : "#6b7280",
+    },
+    text: {
+      color: isDark ? "#e5e7eb" : "#1f2937",
+    },
+  });
 
 export default RightSidebar;

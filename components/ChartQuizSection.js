@@ -1,10 +1,29 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+} from "react-native";
 import { LineChart } from "react-native-chart-kit";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 const screenWidth = Dimensions.get("window").width;
 
 const ChartQuizSection = () => {
+  const { user } = useAuth();
+  const { isDarkMode } = useTheme();
+
+  const [selectedGraphIndex, setSelectedGraphIndex] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+
+  const styles = getStyles(isDarkMode);
+
   const graphs = [
     {
       title: "Bitcoin Price Chart",
@@ -17,11 +36,6 @@ const ChartQuizSection = () => {
       data: [2000, 2100, 1900, 2200, 2150, 2250, 2100, 2300, 2200, 2400],
     },
   ];
-
-  const [selectedGraphIndex, setSelectedGraphIndex] = useState(0);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [isAnswered, setIsAnswered] = useState(false);
 
   const currentGraph = graphs[selectedGraphIndex];
   const maxPrice = Math.max(...currentGraph.data);
@@ -145,11 +159,11 @@ const ChartQuizSection = () => {
           width={screenWidth - 40}
           height={250}
           chartConfig={{
-            backgroundGradientFrom: "#f3f3f3",
-            backgroundGradientTo: "#fff",
+            backgroundGradientFrom: isDarkMode ? "#1e293b" : "#f3f3f3",
+            backgroundGradientTo: isDarkMode ? "#0f172a" : "#fff",
             decimalPlaces: 0,
             color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-            labelColor: () => "#000",
+            labelColor: () => (isDarkMode ? "#e2e8f0" : "#000"),
             style: { borderRadius: 16 },
           }}
           bezier
@@ -206,25 +220,88 @@ const ChartQuizSection = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 10 },
-  graphSelection: { flexDirection: "row", justifyContent: "center", flexWrap: "wrap", marginBottom: 15 },
-  graphButton: { padding: 10, margin: 5, backgroundColor: "#ccc", borderRadius: 8 },
-  selectedGraphButton: { backgroundColor: "#4caf50" },
-  graphButtonText: { color: "#fff", fontSize: 16 },
-  chartContainer: { alignItems: "center", marginBottom: 20 },
-  questionContainer: { padding: 15, backgroundColor: "#f9f9f9", borderRadius: 10 },
-  questionText: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  optionButton: { padding: 10, borderRadius: 8, marginBottom: 8 },
-  correctOption: { backgroundColor: "#4caf50" },
-  wrongOption: { backgroundColor: "#e53935" },
-  defaultOption: { backgroundColor: "#ddd" },
-  optionText: { fontSize: 16, color: "white" },
-  navigationButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 15 },
-  navButton: { padding: 10, backgroundColor: "#2196f3", borderRadius: 8 },
-  disabledNavButton: { backgroundColor: "#aaa" },
-  navButtonText: { color: "white", fontSize: 16 },
-});
+const getStyles = (isDark) =>
+  StyleSheet.create({
+    container: {
+      padding: 20,
+      backgroundColor: isDark ? "#0f172a" : "#fff",
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginBottom: 10,
+      color: isDark ? "#f1f5f9" : "#111827",
+    },
+    graphSelection: {
+      flexDirection: "row",
+      justifyContent: "center",
+      flexWrap: "wrap",
+      marginBottom: 15,
+    },
+    graphButton: {
+      padding: 10,
+      margin: 5,
+      backgroundColor: isDark ? "#475569" : "#ccc",
+      borderRadius: 8,
+    },
+    selectedGraphButton: {
+      backgroundColor: "#4caf50",
+    },
+    graphButtonText: {
+      color: "#fff",
+      fontSize: 16,
+    },
+    chartContainer: {
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    questionContainer: {
+      padding: 15,
+      backgroundColor: isDark ? "#1e293b" : "#f9f9f9",
+      borderRadius: 10,
+    },
+    questionText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: isDark ? "#f8fafc" : "#111",
+    },
+    optionButton: {
+      padding: 10,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    correctOption: {
+      backgroundColor: "#4caf50",
+    },
+    wrongOption: {
+      backgroundColor: "#e53935",
+    },
+    defaultOption: {
+      backgroundColor: isDark ? "#334155" : "#ddd",
+    },
+    optionText: {
+      fontSize: 16,
+      color: "#fff",
+    },
+    navigationButtons: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 15,
+    },
+    navButton: {
+      padding: 10,
+      backgroundColor: "#2196f3",
+      borderRadius: 8,
+    },
+    disabledNavButton: {
+      backgroundColor: "#aaa",
+    },
+    navButtonText: {
+      color: "#fff",
+      fontSize: 16,
+    },
+  });
 
 export default ChartQuizSection;

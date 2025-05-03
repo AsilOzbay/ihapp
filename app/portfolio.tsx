@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import PortfolioCustomization from "../components/PortfolioCustomization";
 import PortfolioDetails from "../components/PortfolioDetails";
 import { API_BASE_URL } from "./env-config";
+import { useTheme } from "../context/ThemeContext";
 
 type Transaction = {
   symbol: string;
@@ -38,32 +39,28 @@ type User = {
 
 export default function PortfolioScreen() {
   const router = useRouter();
-
   const [isDetailsVisible, setDetailsVisible] = useState(false);
   const [isCustomizationVisible, setCustomizationVisible] = useState(false);
   const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null);
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const { isDarkMode: isDark } = useTheme();
 
   useEffect(() => {
-    const fetchPortfolios = async () => {
-      try {
-        const userDataString = await AsyncStorage.getItem("user");
-        const userData = userDataString ? JSON.parse(userDataString) : null;
-        if (userData) {
-          setUser(userData);
-          const response = await fetch(`http://${API_BASE_URL}/portfolios?userId=${userData.id}`);
-          const data = await response.json();
-          setPortfolios(data);
-        } else {
-          router.replace("/auth");
-        }
-      } catch (error) {
-        console.error("Error fetching portfolios:", error);
+    const loadData = async () => {
+      const userDataString = await AsyncStorage.getItem("user");
+      const userData = userDataString ? JSON.parse(userDataString) : null;
+      if (userData) {
+        setUser(userData);
+        const response = await fetch(`http://${API_BASE_URL}/portfolios?userId=${userData.id}`);
+        const data = await response.json();
+        setPortfolios(data);
+      } else {
+        router.replace("/auth");
       }
     };
 
-    fetchPortfolios();
+    loadData();
   }, []);
 
   const reloadPortfolios = async () => {
@@ -84,6 +81,8 @@ export default function PortfolioScreen() {
       router.replace("/auth");
     }
   };
+
+  const styles = getStyles(isDark);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -161,58 +160,91 @@ export default function PortfolioScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f3f4f6" },
-  scrollContainer: { padding: 16 },
-  centeredContainer: { alignItems: "center", justifyContent: "center" },
-  heading: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E40AF",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#4B5563",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  createButton: {
-    backgroundColor: "#2563EB",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  createButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#374151",
-  },
-  portfolioList: { width: "100%", marginTop: 16 },
-  portfolioCard: {
-    backgroundColor: "white",
-    padding: 12,
-    borderRadius: 8,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  portfolioName: { fontSize: 16, fontWeight: "bold", color: "#1E293B" },
-  transactionCount: { fontSize: 14, color: "#6B7280" },
-  buttonGroup: { flexDirection: "row", gap: 10 },
-  editButton: { backgroundColor: "#facc15", padding: 8, borderRadius: 6 },
-  viewButton: { backgroundColor: "#10b981", padding: 8, borderRadius: 6 },
-  buttonText: { color: "white", fontWeight: "bold" },
-});
+const getStyles = (isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? "#0f172a" : "#f3f4f6",
+    },
+    scrollContainer: {
+      padding: 16,
+    },
+    centeredContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    heading: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: isDark ? "#e0f2fe" : "#1E40AF",
+      textAlign: "center",
+      marginBottom: 10,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: isDark ? "#cbd5e1" : "#4B5563",
+      textAlign: "center",
+      marginBottom: 16,
+    },
+    createButton: {
+      backgroundColor: "#2563EB",
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 16,
+    },
+    createButtonText: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 8,
+      color: isDark ? "#f8fafc" : "#374151",
+    },
+    portfolioList: {
+      width: "100%",
+      marginTop: 16,
+    },
+    portfolioCard: {
+      backgroundColor: isDark ? "#1e293b" : "white",
+      padding: 12,
+      borderRadius: 8,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 10,
+      shadowColor: "#000",
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 3,
+    },
+    portfolioName: {
+      fontSize: 16,
+      fontWeight: "bold",
+      color: isDark ? "#f1f5f9" : "#1E293B",
+    },
+    transactionCount: {
+      fontSize: 14,
+      color: isDark ? "#94a3b8" : "#6B7280",
+    },
+    buttonGroup: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    editButton: {
+      backgroundColor: "#facc15",
+      padding: 8,
+      borderRadius: 6,
+    },
+    viewButton: {
+      backgroundColor: "#10b981",
+      padding: 8,
+      borderRadius: 6,
+    },
+    buttonText: {
+      color: "white",
+      fontWeight: "bold",
+    },
+  });

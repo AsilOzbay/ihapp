@@ -13,6 +13,7 @@ import { LineChart, PieChart } from "react-native-chart-kit";
 import boyAvatar from "../assets/images/boy_3984629.png";
 import girlAvatar from "../assets/images/girl_3984664.png";
 import { API_BASE_URL } from "./env-config";
+import { useTheme } from "../context/ThemeContext";
 
 const PortfolioDetails = ({ portfolioId, onBack }) => {
   const [portfolio, setPortfolio] = useState(null);
@@ -20,6 +21,9 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
   const [error, setError] = useState("");
   const [holdings, setHoldings] = useState([]);
   const [totalInvestedData, setTotalInvestedData] = useState([]);
+
+  const { isDarkMode } = useTheme();
+  const styles = getStyles(isDarkMode);
 
   useEffect(() => {
     const fetchPortfolioDetails = async () => {
@@ -107,46 +111,20 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
             <View style={styles.row}>
               <View style={styles.statBox}>
                 <Text style={styles.label}>Value</Text>
-                <Text
-                  style={styles.value}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
-                  ${totalValue.toLocaleString()}
-                </Text>
+                <Text style={styles.value}>${totalValue.toLocaleString()}</Text>
               </View>
               <View style={styles.statBox}>
                 <Text style={styles.label}>Invested</Text>
-                <Text
-                  style={styles.value}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
-                  ${totalInvested.toLocaleString()}
-                </Text>
+                <Text style={styles.value}>${totalInvested.toLocaleString()}</Text>
               </View>
               <View style={styles.statBox}>
-                <Text
-                  style={[
-                    styles.value,
-                    { color: totalProfitLoss >= 0 ? "green" : "red" },
-                  ]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
+                <Text style={[styles.value, { color: totalProfitLoss >= 0 ? "green" : "red" }]}>
                   ${totalProfitLoss.toLocaleString()}
                 </Text>
                 <Text style={styles.label}>P/L</Text>
               </View>
               <View style={styles.statBox}>
-                <Text
-                  style={[
-                    styles.value,
-                    { color: totalProfitLoss >= 0 ? "green" : "red" },
-                  ]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
+                <Text style={[styles.value, { color: totalProfitLoss >= 0 ? "green" : "red" }]}>
                   {profitPercent}%
                 </Text>
                 <Text style={styles.label}>P/L %</Text>
@@ -159,25 +137,16 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
             <LineChart
               data={{
                 labels: totalInvestedData.map((d) => d.date),
-                datasets: [
-                  {
-                    data: totalInvestedData.map((d) => parseFloat(d.totalInvested)),
-                  },
-                ],
+                datasets: [{ data: totalInvestedData.map((d) => parseFloat(d.totalInvested)) }],
               }}
               width={Dimensions.get("window").width - 32}
               height={220}
-              yLabelsOffset={15}
-              withInnerLines={false}
               chartConfig={{
-                backgroundGradientFrom: "#fff",
-                backgroundGradientTo: "#fff",
+                backgroundGradientFrom: isDarkMode ? "#1e293b" : "#fff",
+                backgroundGradientTo: isDarkMode ? "#0f172a" : "#fff",
                 decimalPlaces: 2,
                 color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
-                labelColor: () => "#374151",
-                propsForLabels: {
-                  fontSize: 10,
-                },
+                labelColor: () => (isDarkMode ? "#e5e7eb" : "#374151"),
               }}
               style={{ borderRadius: 8 }}
             />
@@ -190,7 +159,7 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
                 name: h.symbol,
                 amount: h.currentValue,
                 color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-                legendFontColor: "#000",
+                legendFontColor: isDarkMode ? "#f1f5f9" : "#000",
                 legendFontSize: 12,
               }))}
               width={Dimensions.get("window").width - 32}
@@ -247,51 +216,52 @@ const PortfolioDetails = ({ portfolioId, onBack }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  backButton: { padding: 10, marginBottom: 10 },
-  backButtonText: { color: "#2563eb", fontSize: 16 },
-  card: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    marginHorizontal: 16,
-    elevation: 3,
-  },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 12 },
-  chartCard: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    marginHorizontal: 16,
-    alignItems: "center",
-    elevation: 3,
-  },
-  chartTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 8 },
-  label: { fontSize: 14, color: "#4b5563", marginBottom: 4 },
-  value: { fontSize: 16, fontWeight: "bold" },
-  row: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
-  statBox: { alignItems: "center", flex: 1, paddingHorizontal: 4 },
-  avatar: { width: 64, height: 64, borderRadius: 32, marginVertical: 8 },
-  tableHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-  transactionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-  tableCol: { flex: 1, fontSize: 12, textAlign: "center" },
-  errorText: { color: "red", fontSize: 16, textAlign: "center", marginTop: 20 },
-});
+const getStyles = (isDark) =>
+  StyleSheet.create({
+    backButton: { padding: 10, marginBottom: 10 },
+    backButtonText: { color: "#2563eb", fontSize: 16 },
+    card: {
+      backgroundColor: isDark ? "#1e293b" : "#fff",
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 20,
+      marginHorizontal: 16,
+      elevation: 3,
+    },
+    title: { fontSize: 22, fontWeight: "bold", marginBottom: 12, color: isDark ? "#f8fafc" : "#000" },
+    chartCard: {
+      backgroundColor: isDark ? "#1e293b" : "#fff",
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 20,
+      marginHorizontal: 16,
+      alignItems: "center",
+      elevation: 3,
+    },
+    chartTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10, color: isDark ? "#e5e7eb" : "#000" },
+    sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 8, color: isDark ? "#f1f5f9" : "#000" },
+    label: { fontSize: 14, color: isDark ? "#cbd5e1" : "#4b5563", marginBottom: 4 },
+    value: { fontSize: 16, fontWeight: "bold", color: isDark ? "#f1f5f9" : "#0f172a" },
+    row: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
+    statBox: { alignItems: "center", flex: 1, paddingHorizontal: 4 },
+    avatar: { width: 64, height: 64, borderRadius: 32, marginVertical: 8 },
+    tableHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingBottom: 6,
+      borderBottomWidth: 1,
+      borderColor: isDark ? "#334155" : "#e5e7eb",
+    },
+    transactionRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderColor: isDark ? "#334155" : "#e5e7eb",
+    },
+    tableCol: { flex: 1, fontSize: 12, textAlign: "center", color: isDark ? "#e2e8f0" : "#000" },
+    errorText: { color: "red", fontSize: 16, textAlign: "center", marginTop: 20 },
+  });
 
 export default PortfolioDetails;

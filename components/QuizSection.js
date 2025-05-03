@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
-// 50 sorudan oluşan soru havuzu
 const allQuestions = [
   { question: "What is the native cryptocurrency of Ethereum?", options: ["Bitcoin", "Ether", "Solana", "Cardano"], correct: 1 },
   { question: "Which consensus algorithm does Bitcoin use?", options: ["Proof of Stake", "Proof of Work", "Delegated Proof of Stake", "Proof of Authority"], correct: 1 },
@@ -27,7 +33,6 @@ const allQuestions = [
   { question: "Which cryptocurrency introduced the concept of 'staking'?", options: ["Ethereum", "Bitcoin", "Cardano", "Polkadot"], correct: 2 },
 ];
 
-// Test başına gösterilecek 10 rastgele soru
 const getRandomQuestions = () => {
   const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, 10);
@@ -41,18 +46,19 @@ const Quiz = () => {
   const [score, setScore] = useState(0);
   const [isTestFinished, setIsTestFinished] = useState(false);
 
+  const { isDarkMode } = useTheme();
+  const styles = getStyles(isDarkMode);
+
   useEffect(() => {
     setQuestions(getRandomQuestions());
   }, []);
 
   const handleOptionClick = (index) => {
     if (isAnswered) return;
-
     setSelectedOption(index);
     setIsAnswered(true);
-
     if (index === questions[currentQuestion].correct) {
-      setScore(score + 1);
+      setScore((prev) => prev + 1);
     }
   };
 
@@ -110,21 +116,81 @@ const Quiz = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { padding: 15, backgroundColor: "#f9f9f9", alignItems: "center" },
-  header: { fontSize: 24, fontWeight: "bold", marginBottom: 10, color: "#333" },
-  quizContainer: { width: "100%", maxWidth: 400, backgroundColor: "#fff", padding: 20, borderRadius: 8, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  resultContainer: { alignItems: "center", padding: 20 },
-  resultText: { fontSize: 20, fontWeight: "bold", color: "#333" },
-  scoreText: { fontSize: 18, marginTop: 10, color: "#007bff" },
-  question: { fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#222" },
-  optionButton: { padding: 10, borderRadius: 5, marginVertical: 5, alignItems: "center" },
-  correctOption: { backgroundColor: "green" },
-  wrongOption: { backgroundColor: "red" },
-  defaultOption: { backgroundColor: "#ddd" },
-  optionText: { fontSize: 16, color: "white" },
-  nextButton: { backgroundColor: "#007bff", padding: 12, borderRadius: 5, alignItems: "center", marginTop: 10 },
-  nextButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
-});
+const getStyles = (isDark) =>
+  StyleSheet.create({
+    container: {
+      padding: 15,
+      backgroundColor: isDark ? "#0f172a" : "#f9f9f9",
+      alignItems: "center",
+      flexGrow: 1,
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: isDark ? "#f8fafc" : "#333",
+    },
+    quizContainer: {
+      width: "100%",
+      maxWidth: 400,
+      backgroundColor: isDark ? "#1e293b" : "#fff",
+      padding: 20,
+      borderRadius: 8,
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    resultContainer: {
+      alignItems: "center",
+      padding: 20,
+    },
+    resultText: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: isDark ? "#f8fafc" : "#333",
+    },
+    scoreText: {
+      fontSize: 18,
+      marginTop: 10,
+      color: "#3b82f6",
+    },
+    question: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: isDark ? "#f1f5f9" : "#222",
+    },
+    optionButton: {
+      padding: 10,
+      borderRadius: 5,
+      marginVertical: 5,
+      alignItems: "center",
+    },
+    correctOption: {
+      backgroundColor: "#22c55e",
+    },
+    wrongOption: {
+      backgroundColor: "#ef4444",
+    },
+    defaultOption: {
+      backgroundColor: isDark ? "#334155" : "#ddd",
+    },
+    optionText: {
+      fontSize: 16,
+      color: "#fff",
+    },
+    nextButton: {
+      backgroundColor: "#3b82f6",
+      padding: 12,
+      borderRadius: 5,
+      alignItems: "center",
+      marginTop: 10,
+    },
+    nextButtonText: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+  });
 
 export default Quiz;

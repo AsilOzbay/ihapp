@@ -1,4 +1,3 @@
-// components/SettingsScreen.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -11,6 +10,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { API_BASE_URL } from "../components/env-config";
 
 const availableCoins = [
@@ -20,6 +20,8 @@ const availableCoins = [
 
 const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
   const { user } = useAuth();
+  const { isDarkMode: isDark } = useTheme();
+  const styles = getStyles(isDark);
   const [selectedCoins, setSelectedCoins] = useState<string[]>([]);
 
   useEffect(() => {
@@ -79,7 +81,6 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
 
         <Text style={styles.title}>Select Your Favorite Coins</Text>
 
-        {/* Select All / Clear All Buttons */}
         <View style={styles.actionsRow}>
           <TouchableOpacity onPress={handleSelectAll} style={styles.selectButton}>
             <Text style={styles.selectButtonText}>Select All</Text>
@@ -89,7 +90,6 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Coin List */}
         <View style={styles.coinsGrid}>
           {availableCoins.map((coin) => (
             <TouchableOpacity
@@ -114,50 +114,80 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f3f4f6" },
-  scrollContainer: { padding: 20 },
-  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
-  actionsRow: { flexDirection: "row", justifyContent: "space-around", marginBottom: 16 },
-  selectButton: {
-    backgroundColor: "#22c55e",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  clearButton: {
-    backgroundColor: "#ef4444",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  selectButtonText: { color: "white", fontWeight: "bold" },
-  clearButtonText: { color: "white", fontWeight: "bold" },
-  coinsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    justifyContent: "center",
-  },
-  coinBox: {
-    backgroundColor: "#e5e7eb",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  selectedCoinBox: { backgroundColor: "#2563EB" },
-  coinText: { fontSize: 16, color: "#1f2937" },
-  selectedCoinText: { color: "white", fontWeight: "bold" },
-  backButton: { marginBottom: 20, alignSelf: "flex-start", padding: 10 },
-  backButtonText: { fontSize: 16, color: "#2563EB" },
-  saveButton: {
-    backgroundColor: "#2563EB",
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 30,
-    alignItems: "center",
-  },
-  saveButtonText: { color: "white", fontSize: 18, fontWeight: "bold" },
-});
+const getStyles = (isDark: boolean) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: isDark ? "#0f172a" : "#f3f4f6" },
+    scrollContainer: { padding: 20 },
+    title: {
+      fontSize: 22,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginBottom: 20,
+      color: isDark ? "#f8fafc" : "#111827",
+    },
+    actionsRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginBottom: 16,
+    },
+    selectButton: {
+      backgroundColor: "#22c55e",
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+    },
+    clearButton: {
+      backgroundColor: "#ef4444",
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+    },
+    selectButtonText: { color: "white", fontWeight: "bold" },
+    clearButtonText: { color: "white", fontWeight: "bold" },
+    coinsGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+      justifyContent: "center",
+    },
+    coinBox: {
+      backgroundColor: isDark ? "#1e293b" : "#e5e7eb",
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 8,
+    },
+    selectedCoinBox: {
+      backgroundColor: "#2563EB",
+    },
+    coinText: {
+      fontSize: 16,
+      color: isDark ? "#f1f5f9" : "#1f2937",
+    },
+    selectedCoinText: {
+      color: "white",
+      fontWeight: "bold",
+    },
+    backButton: {
+      marginBottom: 20,
+      alignSelf: "flex-start",
+      padding: 10,
+    },
+    backButtonText: {
+      fontSize: 16,
+      color: "#2563EB",
+    },
+    saveButton: {
+      backgroundColor: "#2563EB",
+      padding: 14,
+      borderRadius: 10,
+      marginTop: 30,
+      alignItems: "center",
+    },
+    saveButtonText: {
+      color: "white",
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+  });
 
 export default SettingsScreen;

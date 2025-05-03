@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { SelectedCoinsProvider } from "../context/SelectedCoinsContext";
 import { View, Text, StyleSheet } from "react-native";
+import { ThemeProvider } from "../context/ThemeContext";
 
 function SplashScreen() {
   return (
@@ -61,11 +62,13 @@ function LayoutTabsWithConditionalAuth() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <SelectedCoinsProvider>
-        <LayoutTabsWithConditionalAuth />
-      </SelectedCoinsProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SelectedCoinsProvider>
+          <LayoutTabsWithConditionalAuth />
+        </SelectedCoinsProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

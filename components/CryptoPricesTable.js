@@ -1,4 +1,3 @@
-// components/CryptoPricesTable.js
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -16,6 +15,7 @@ import TradePage from "./TradePage";
 import { API_BASE_URL } from "./env-config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 const CryptoPricesTable = () => {
   const [cryptoData, setCryptoData] = useState([]);
@@ -26,6 +26,7 @@ const CryptoPricesTable = () => {
   const [currency, setCurrency] = useState("USD");
   const [selectedCoins, setSelectedCoins] = useState([]);
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
 
   const conversionRates = { USD: 1, EUR: 0.9, GBP: 0.8, TRY: 27 };
   const currencySymbols = { USD: "$", EUR: "€", GBP: "£", TRY: "₺" };
@@ -65,10 +66,12 @@ const CryptoPricesTable = () => {
     loadSelectedCoins();
   }, [user]);
 
+  const styles = getStyles(isDarkMode);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#3b82f6" />
       </View>
     );
   }
@@ -115,7 +118,7 @@ const CryptoPricesTable = () => {
           onValueChange={(value) => setCurrency(value)}
           style={styles.picker}
           itemStyle={styles.pickerItem}
-          dropdownIconColor="#333"
+          dropdownIconColor={isDarkMode ? "#f1f5f9" : "#333"}
         >
           <Picker.Item label="USD" value="USD" />
           <Picker.Item label="EUR" value="EUR" />
@@ -127,6 +130,7 @@ const CryptoPricesTable = () => {
       <TextInput
         style={styles.searchInput}
         placeholder="Search by symbol"
+        placeholderTextColor={isDarkMode ? "#94a3b8" : "#888"}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -147,8 +151,16 @@ const CryptoPricesTable = () => {
         return (
           <View key={index} style={styles.row}>
             <Text style={styles.cell}>{item.symbol}</Text>
-            <Text style={styles.cell}>{symbol}{price.toLocaleString()}</Text>
-            <Text style={[styles.cell, +dailyChange > 0 ? styles.green : styles.red]}>
+            <Text style={styles.cell}>
+              {symbol}
+              {price.toLocaleString()}
+            </Text>
+            <Text
+              style={[
+                styles.cell,
+                +dailyChange > 0 ? styles.green : styles.red,
+              ]}
+            >
               {dailyChange}%
             </Text>
             <TouchableOpacity
@@ -167,22 +179,110 @@ const CryptoPricesTable = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#f1f5f9", flexGrow: 1 },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 12, color: "#111", borderBottomWidth: 1, borderBottomColor: "#ccc", paddingBottom: 6 },
-  pickerWrapper: { backgroundColor: "#fff", borderColor: "#ccc", borderWidth: 1, borderRadius: 10, marginBottom: 12, overflow: "hidden", height: 48, justifyContent: "center" },
-  picker: { height: 52, color: "#111", paddingHorizontal: 8 },
-  pickerItem: { fontSize: 16 },
-  searchInput: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 10, marginBottom: 16, backgroundColor: "#fff" },
-  headerRow: { flexDirection: "row", backgroundColor: "#e5e7eb", paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#cbd5e1", marginBottom: 6 },
-  headerCell: { flex: 1, fontWeight: "bold", fontSize: 14, color: "#1e293b", textAlign: "center" },
-  row: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", marginBottom: 8, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 6, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
-  cell: { flex: 1, fontSize: 14, textAlign: "center", color: "#1f2937" },
-  green: { color: "#16a34a" },
-  red: { color: "#dc2626" },
-  detailsButton: { alignItems: "center", backgroundColor: "#2563EB", paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, minWidth: 70 },
-  detailsButtonText: { color: "#fff", fontSize: 13, fontWeight: "bold" },
-});
+const getStyles = (isDark) =>
+  StyleSheet.create({
+    container: {
+      padding: 16,
+      backgroundColor: isDark ? "#0f172a" : "#f1f5f9",
+      flexGrow: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginBottom: 12,
+      color: isDark ? "#f8fafc" : "#111",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#334155" : "#ccc",
+      paddingBottom: 6,
+    },
+    pickerWrapper: {
+      backgroundColor: isDark ? "#1e293b" : "#fff",
+      borderColor: isDark ? "#475569" : "#ccc",
+      borderWidth: 1,
+      borderRadius: 10,
+      marginBottom: 12,
+      overflow: "hidden",
+      height: 48,
+      justifyContent: "center",
+    },
+    picker: {
+      height: 52,
+      color: isDark ? "#f1f5f9" : "#111",
+      paddingHorizontal: 8,
+    },
+    pickerItem: {
+      fontSize: 16,
+    },
+    searchInput: {
+      borderWidth: 1,
+      borderColor: isDark ? "#475569" : "#ccc",
+      borderRadius: 10,
+      padding: 10,
+      marginBottom: 16,
+      backgroundColor: isDark ? "#1e293b" : "#fff",
+      color: isDark ? "#f1f5f9" : "#111",
+    },
+    headerRow: {
+      flexDirection: "row",
+      backgroundColor: isDark ? "#334155" : "#e5e7eb",
+      paddingVertical: 8,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: isDark ? "#475569" : "#cbd5e1",
+      marginBottom: 6,
+    },
+    headerCell: {
+      flex: 1,
+      fontWeight: "bold",
+      fontSize: 14,
+      color: isDark ? "#f8fafc" : "#1e293b",
+      textAlign: "center",
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: isDark ? "#1e293b" : "#fff",
+      marginBottom: 8,
+      borderRadius: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 6,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    cell: {
+      flex: 1,
+      fontSize: 14,
+      textAlign: "center",
+      color: isDark ? "#f1f5f9" : "#1f2937",
+    },
+    green: {
+      color: "#16a34a",
+    },
+    red: {
+      color: "#dc2626",
+    },
+    detailsButton: {
+      alignItems: "center",
+      backgroundColor: "#2563EB",
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      minWidth: 70,
+    },
+    detailsButtonText: {
+      color: "#fff",
+      fontSize: 13,
+      fontWeight: "bold",
+    },
+  });
 
 export default CryptoPricesTable;

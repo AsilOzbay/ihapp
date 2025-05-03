@@ -1,11 +1,22 @@
 import React from "react";
-import { View, Text, ScrollView, SafeAreaView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  SafeAreaView,
+  StyleSheet,
+} from "react-native";
+import { useTheme } from "../context/ThemeContext";
+
 import VideoSection from "../components/VideoSection";
 import QuizSection from "../components/QuizSection";
 import InfoSection from "../components/InfoSection";
 import ChartQuizSection from "../components/ChartQuizSection";
 
 export default function LearningHubScreen() {
+  const { isDarkMode: isDark } = useTheme();
+  const styles = getStyles(isDark);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -32,29 +43,39 @@ export default function LearningHubScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f3f4f6" },
-  scrollContainer: { padding: 16, alignItems: "center" },
-  header: { alignItems: "center", marginBottom: 24 },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#1E40AF",
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#4B5563",
-    textAlign: "center",
-    marginTop: 8,
-    maxWidth: 600,
-  },
-  section: {
-    width: "100%",
-    maxWidth: 800,
-    marginBottom: 24,
-  },
-  spacer: {
-    height: 20,
-  },
-});
+const getStyles = (isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? "#0f172a" : "#f3f4f6",
+    },
+    scrollContainer: {
+      padding: 16,
+      alignItems: "center",
+    },
+    header: {
+      alignItems: "center",
+      marginBottom: 24,
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: "bold",
+      textAlign: "center",
+      color: isDark ? "#e0f2fe" : "#1E40AF",
+    },
+    subtitle: {
+      fontSize: 14,
+      textAlign: "center",
+      marginTop: 8,
+      maxWidth: 600,
+      color: isDark ? "#94a3b8" : "#4B5563",
+    },
+    section: {
+      width: "100%",
+      maxWidth: 800,
+      marginBottom: 24,
+    },
+    spacer: {
+      height: 20,
+    },
+  });

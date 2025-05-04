@@ -876,10 +876,13 @@ app.get('/settings/:userId', async (req, res) => {
 
     const settings = await Settings.findOne({ userId });
     if (!settings) {
-      return res.status(404).json({ message: 'Settings not found for this user.' });
+      return res.status(200).json({ selectedCoins: [], theme: 'light' });
     }
 
-    res.status(200).json(settings);
+    res.status(200).json({
+      selectedCoins: settings.selectedCoins || [],
+      theme: settings.theme || 'light',
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching settings', error: error.message });
   }
@@ -891,10 +894,14 @@ app.put('/settings/:userId', async (req, res) => {
     const { userId } = req.params;
     const { theme, selectedCoins } = req.body;
 
+    const updateFields = {};
+    if (theme) updateFields.theme = theme;
+    if (selectedCoins) updateFields.selectedCoins = selectedCoins;
+
     const updatedSettings = await Settings.findOneAndUpdate(
       { userId },
-      { theme, selectedCoins },
-      { new: true, upsert: true } // upsert: true olursa yoksa yeni yaratır
+      { $set: updateFields },
+      { new: true, upsert: true }
     );
 
     res.status(200).json({ message: 'Settings updated successfully', settings: updatedSettings });

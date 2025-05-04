@@ -22,7 +22,7 @@ import SettingsScreen from "../components/SettingsScreen";
 
 export default function HomeScreen() {
   const { logout, user } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, setDarkMode } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -80,7 +80,7 @@ export default function HomeScreen() {
               <Text style={dynamicStyles.themeText}>Dark Mode</Text>
               <Switch
                 value={isDarkMode}
-                onValueChange={toggleTheme}
+                onValueChange={setDarkMode}
                 trackColor={{ false: "#ccc", true: "#4b5563" }}
                 thumbColor={isDarkMode ? "#f9fafb" : "#fff"}
               />

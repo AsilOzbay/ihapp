@@ -62,13 +62,13 @@ function LayoutTabsWithConditionalAuth() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <ThemeProvider>
         <SelectedCoinsProvider>
           <LayoutTabsWithConditionalAuth />
         </SelectedCoinsProvider>
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

@@ -199,3 +199,5 @@ const getStyles = (isDarkMode) =>
       transform: [{ scale: 0.9 }],
     },
   });
+
+  // TA-72 işini yanlışlıkla TA-67 ye pushladığım için bunu düzeltmek amaçlı bir push

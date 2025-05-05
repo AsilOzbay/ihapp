@@ -5,11 +5,16 @@ import { AuthProvider, useAuth } from "../context/AuthContext";
 import { SelectedCoinsProvider } from "../context/SelectedCoinsContext";
 import { View, Text, StyleSheet } from "react-native";
 import { ThemeProvider } from "../context/ThemeContext";
+import { Image } from "react-native";
 
 function SplashScreen() {
   return (
     <View style={styles.splashContainer}>
-      <Text style={styles.splashText}>INVESTING HUB</Text>
+      <Image
+        source={require("../assets/images/splash-icon.png")}
+        style={styles.splashImage}
+        resizeMode="contain"
+      />
     </View>
   );
 }
@@ -84,5 +89,9 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     letterSpacing: 2,
+  },
+  splashImage: {
+    width: 220,
+    height: 220,
   },
 });

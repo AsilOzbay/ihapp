@@ -1,2 +1,2 @@
 
-export const API_BASE_URL = ":5000";
+export const API_BASE_URL = "192.168.1.9:5000";

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { registerForPushNotificationsAsync } from "../utils/notifications";
+import { API_BASE_URL } from "../components/env-config";
 
 type User = {
   id: string;
@@ -34,6 +36,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await AsyncStorage.setItem("user", JSON.stringify(user));
     await AsyncStorage.setItem("token", token);
     setUser(user);
+
+    try {
+      const pushToken = await registerForPushNotificationsAsync();
+      if (pushToken) {
+        await fetch(`http://${API_BASE_URL}/save-push-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, token: pushToken }),
+        });
+      }
+    } catch (err) {
+      console.warn("Push token kaydedilirken hata oluştu:", err);
+      // Ancak burada hata olsa bile giriş devam eder
+    }
   };
 
   const logout = async () => {

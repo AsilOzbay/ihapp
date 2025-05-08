@@ -1,6 +1,8 @@
+import messaging from "@react-native-firebase/messaging";
+import { Alert } from "react-native";
+
+// (Opsiyonel) foreground bildirimleri için sound, banner vs.
 import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
-import { Platform } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -12,37 +14,22 @@ Notifications.setNotificationHandler({
 });
 
 export async function registerForPushNotificationsAsync() {
-  let token;
+  try {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-  if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== "granted") {
-      alert("Failed to get push token for push notification!");
+    if (!enabled) {
+      Alert.alert("Bildirim izni verilmedi.");
       return null;
     }
 
-    token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log("Expo Push Token:", token);
-  } else {
-    alert("Must use physical device for Push Notifications");
+    const fcmToken = await messaging().getToken();
+    console.log("✅ FCM Token:", fcmToken);
+    return fcmToken;
+  } catch (err) {
+    console.error("❌ FCM token alınırken hata:", err);
     return null;
   }
-
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-    });
-  }
-
-  return token;
 }

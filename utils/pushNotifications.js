@@ -1,22 +1,45 @@
-const { Expo } = require("expo-server-sdk");
-const expo = new Expo();
+const admin = require("firebase-admin");
+const serviceAccount = require("../backend/service-account.json");
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 async function sendNotificationToUser(user, title, body) {
-  if (!user.expoPushToken || !Expo.isExpoPushToken(user.expoPushToken)) return;
+  if (!user.fcmToken) {
+    console.warn(`❗ Kullanıcının FCM token'ı yok: ${user.email}`);
+    return;
+  }
 
   const message = {
-    to: user.expoPushToken,
-    sound: "default",
-    title,
-    body,
+    token: user.fcmToken,
+    notification: {
+      title,
+      body,
+    },
+    android: {
+      priority: "high",
+      notification: {
+        sound: "default",
+      },
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: "default",
+        },
+      },
+    },
     data: { withSome: "data" },
   };
 
   try {
-    const result = await expo.sendPushNotificationsAsync([message]);
-    console.log("📨 Push gönderim sonucu:", result); // EKLE BUNU
+    const response = await admin.messaging().send(message);
+    console.log("📨 Bildirim gönderildi:", response);
   } catch (err) {
-    console.error("Push notification failed:", err);
+    console.error("📛 Bildirim gönderilemedi:", err.message);
   }
 }
 

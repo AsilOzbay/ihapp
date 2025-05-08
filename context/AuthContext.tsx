@@ -38,17 +38,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(user);
 
     try {
-      const pushToken = await registerForPushNotificationsAsync();
-      if (pushToken) {
+      const fcmToken = await registerForPushNotificationsAsync();
+      if (fcmToken) {
         await fetch(`http://${API_BASE_URL}/save-push-token`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user.id, token: pushToken }),
+          body: JSON.stringify({ userId: user.id, token: fcmToken }),
         });
       }
     } catch (err) {
-      console.warn("Push token kaydedilirken hata oluştu:", err);
-      // Ancak burada hata olsa bile giriş devam eder
+      console.warn("📛 Push token kaydedilirken hata oluştu:", err);
     }
   };
 

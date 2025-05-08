@@ -178,20 +178,40 @@ app.post('/login', async (req, res) => {
 });
 
 
+// ---------------------- SAVE FCM TOKEN ----------------------
 app.post("/save-push-token", async (req, res) => {
   const { userId, token } = req.body;
   try {
-    await User.findByIdAndUpdate(userId, { expoPushToken: token });
+    await User.findByIdAndUpdate(userId, { fcmToken: token });
     res.json({ success: true });
   } catch (err) {
-    console.error("Error saving push token:", err);
+    console.error("❌ Error saving FCM token:", err);
     res.status(500).json({ error: "Could not save token" });
+  }
+});
+
+// ---------------------- TEST NOTIFICATION ----------------------
+app.post("/test-notification", async (req, res) => {
+  try {
+    const user = await User.findOne({ fcmToken: { $ne: "" } });
+    if (!user) return res.status(404).json({ error: "No user with FCM token" });
+
+    console.log("📨 Test bildirimi gönderiliyor kullanıcıya:", user.email);
+
+    await sendNotificationToUser(
+      user,
+      "📢 Push Notification Test",
+      "Bu bir test bildirimidir (Postman)."
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("🚨 Test notification error:", err);
+    res.status(500).json({ error: "Failed to send test notification" });
   }
 });
  
   
-
-
 
 // -------------------- CRYPTO DATA FETCHING --------------------
 // Cache variables
@@ -250,46 +270,26 @@ const fetchCryptoData = async () => {
         }
       }
   
-    } catch (error) {
-      console.error('Error fetching crypto data:', error.message);
-    }
 
     const ALERT_THRESHOLD = 10;
-
-// Bildirim tetikleme
-const users = await User.find({ expoPushToken: { $ne: "" } });
-for (let coin of cachedCryptoData) {
-  if (Math.abs(coin.dailyChange) >= ALERT_THRESHOLD) {
-    for (const user of users) {
-      await sendNotificationToUser(
-        user,
-        `📈 ${coin.symbol} ${coin.dailyChange > 0 ? "rallied!" : "crashed!"}`,
-        `${coin.symbol} moved ${coin.dailyChange.toFixed(2)}% in 24h. Check your portfolio!`
-      );
+    const users = await User.find({ fcmToken: { $ne: "" } }); // expoPushToken yerine fcmToken kullanıyorsan
+    for (let coin of cachedCryptoData) {
+      if (Math.abs(coin.dailyChange) >= ALERT_THRESHOLD) {
+        for (const user of users) {
+          await sendNotificationToUser(
+            user,
+            `📈 ${coin.symbol} ${coin.dailyChange > 0 ? "rallied!" : "crashed!"}`,
+            `${coin.symbol} moved ${coin.dailyChange.toFixed(2)}% in 24h. Check your portfolio!`
+          );
+        }
+      }
     }
+  } catch (err) {
+    console.error("❌ Error fetching crypto data:", err.message);
   }
-}
-  };
+};
 
-  app.post("/test-notification", async (req, res) => {
-    try {
-      const user = await User.findOne({ expoPushToken: { $ne: "" } });
-      if (!user) return res.status(404).json({ error: "No user with push token" });
-  
-      console.log("📨 Test bildirimi gönderiliyor kullanıcıya:", user.email);
-  
-      await sendNotificationToUser(
-        user,
-        "📢 Push Notification Test",
-        "Bu bir test bildirimidir (Postman)."
-      );
-  
-      res.json({ success: true });
-    } catch (err) {
-      console.error("🚨 Test notification error:", err);
-      res.status(500).json({ error: "Failed to send test notification" });
-    }
-  });
+
 
 // --------------------------------------------------------
 // PART 2: Add or replace endpoints for multi-timeframe
